@@ -3,303 +3,1031 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Nova AI</title>
+  <title>Nova AI — Nova Labs</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #131314;
-      --surface: #1e1f20;
-      --surface-hover: #282a2c;
-      --text: #e3e3e3;
-      --text-muted: #8e918f;
-      --accent: #a8c7fa;
-      --pro-grad: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
-      --border: #333537;
+      --bg-primary: #0b0d12;
+      --bg-secondary: #131722;
+      --bg-tertiary: #1c2232;
+      --bg-code: #080a0f;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --border: #262d3f;
+      --danger: #ef4444;
+      --success: #10b981;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    
-    /* Шапка */
-    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg); }
-    .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 18px; }
-    .sparkle { background: var(--pro-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 20px; }
-    .header-actions { display: flex; align-items: center; gap: 8px; }
-    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--surface); border: 1px solid var(--border); cursor: pointer; }
-    .badge.pro { background: var(--pro-grad); color: #fff; border: none; }
 
-    /* Выбор модели */
-    .model-bar { padding: 8px 16px; background: var(--bg); display: flex; gap: 8px; overflow-x: auto; border-bottom: 1px solid var(--border); }
-    .model-bar::-webkit-scrollbar { display: none; }
-    .model-chip { padding: 6px 12px; border-radius: 16px; background: var(--surface); color: var(--text-muted); font-size: 13px; white-space: nowrap; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-    .model-chip.active { background: var(--surface-hover); color: var(--accent); border-color: var(--accent); }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    }
 
-    /* Область чата */
-    #chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-    .welcome { margin: auto; text-align: center; max-width: 300px; }
-    .welcome h1 { font-size: 26px; background: var(--pro-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
-    .welcome p { color: var(--text-muted); font-size: 14px; line-height: 1.4; }
-    .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
-    .msg.user { align-self: flex-end; background: var(--surface-hover); border-bottom-right-radius: 4px; }
-    .msg.ai { align-self: flex-start; background: transparent; padding-left: 4px; }
-    .msg.error { color: #f28b82; background: rgba(242,139,130,0.1); }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-    /* Поле ввода */
-    .input-wrap { padding: 10px 14px 16px; background: var(--bg); }
-    .input-box { display: flex; align-items: flex-end; gap: 8px; background: var(--surface); border-radius: 24px; padding: 8px 12px; border: 1px solid var(--border); }
-    textarea { flex: 1; background: transparent; border: none; color: var(--text); font-size: 15px; resize: none; max-height: 120px; outline: none; padding: 4px; line-height: 1.4; }
-    button.send-btn { background: var(--accent); color: #000; border: none; width: 34px; height: 34px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    button.send-btn:disabled { opacity: 0.4; cursor: default; }
+    /* Header */
+    .header {
+      height: 56px;
+      padding: 0 14px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 10;
+    }
 
-    /* Модальное окно подписки */
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: flex-end; }
-    .modal.open { display: flex; }
-    .sheet { background: var(--surface); width: 100%; border-radius: 24px 24px 0 0; padding: 24px 20px 32px; animation: slideUp 0.25s ease; }
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .sheet h2 { font-size: 22px; margin-bottom: 6px; }
-    .sheet p { color: var(--text-muted); font-size: 14px; margin-bottom: 18px; }
-    .plan-card { background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
-    .plan-card.featured { border-color: #9b72cb; }
-    .plan-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .plan-title { font-weight: 700; font-size: 17px; }
-    .plan-price { font-weight: 700; color: var(--accent); }
-    .plan-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4; }
-    .buy-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 600; font-size: 15px; cursor: pointer; background: var(--pro-grad); color: #fff; }
-    .buy-btn.secondary { background: var(--surface-hover); color: var(--text); }
-    .close-btn { width: 100%; padding: 10px; background: transparent; border: none; color: var(--text-muted); margin-top: 8px; font-size: 14px; cursor: pointer; }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .icon-btn:active {
+      background: var(--bg-tertiary);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .quota-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .quota-badge.unlimited {
+      border-color: rgba(99, 102, 241, 0.5);
+      color: #a5b4fc;
+    }
+
+    /* Sidebar Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 40;
+    }
+
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      max-width: 82vw;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .new-chat-btn {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .new-chat-btn:active {
+      background: var(--accent-hover);
+    }
+
+    .chat-list-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+    }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .chat-item {
+      padding: 9px 10px;
+      border-radius: 9px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-primary);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .chat-item.active {
+      background: var(--bg-tertiary);
+      border-color: var(--border);
+    }
+
+    .chat-item-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .chat-delete {
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      font-size: 14px;
+      padding: 2px 4px;
+      cursor: pointer;
+    }
+
+    .drawer-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .admin-open-btn {
+      width: 100%;
+      padding: 9px;
+      border-radius: 9px;
+      border: 1px solid rgba(99, 102, 241, 0.5);
+      background: rgba(99, 102, 241, 0.12);
+      color: #c7d2fe;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+    }
+
+    /* Chat Area */
+    .chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Welcome & Quick Prompts */
+    .welcome {
+      margin: auto;
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+      padding: 12px 6px;
+    }
+
+    .welcome-logo {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin: 0 auto 14px;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
+    }
+
+    .welcome h2 {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .welcome p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+      margin-bottom: 20px;
+    }
+
+    .suggestions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .suggestion-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .suggestion-card:active {
+      background: var(--bg-tertiary);
+      border-color: var(--accent);
+    }
+
+    .suggestion-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .suggestion-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.3;
+    }
+
+    /* Messages & Markdown */
+    .msg {
+      max-width: 88%;
+      padding: 11px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.55;
+      word-wrap: break-word;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+      white-space: pre-wrap;
+    }
+
+    .msg.assistant {
+      align-self: flex-start;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg.assistant p {
+      margin-bottom: 8px;
+    }
+
+    .msg.assistant p:last-child {
+      margin-bottom: 0;
+    }
+
+    .msg.assistant ul, .msg.assistant ol {
+      margin: 6px 0 8px 18px;
+    }
+
+    .msg.assistant li {
+      margin-bottom: 4px;
+    }
+
+    .msg.assistant h3, .msg.assistant h4 {
+      margin: 10px 0 6px;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    .msg.assistant code.inline-code {
+      background: var(--bg-tertiary);
+      padding: 2px 5px;
+      border-radius: 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      color: #c7d2fe;
+    }
+
+    .code-block-wrap {
+      margin: 8px 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-code);
+    }
+
+    .code-block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 10px;
+      background: #111520;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .copy-code-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .copy-code-btn:active {
+      background: var(--accent);
+    }
+
+    .code-block-wrap pre {
+      padding: 10px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: #e5e7eb;
+    }
+
+    .msg.error {
+      align-self: center;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    /* Input Bar */
+    .input-wrapper {
+      padding: 10px 12px 14px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .input-box {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      resize: none;
+      max-height: 110px;
+      outline: none;
+      line-height: 1.4;
+    }
+
+    .input-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .model-select {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 12px;
+      font-weight: 500;
+      outline: none;
+    }
+
+    .send-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Modal (Admin Panel) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 60;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 360px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .modal h3 {
+      font-size: 16px;
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    .admin-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .admin-btn {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .btn-grant { background: var(--success); }
+    .btn-reset { background: var(--accent); }
+    .btn-revoke { background: var(--danger); }
+
+    .admin-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: center;
+      min-height: 16px;
+    }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand"><span class="sparkle">✦</span> Nova AI</div>
-    <div class="header-actions">
-      <div class="badge" id="quotaBadge" onclick="openStore()">...</div>
-      <div class="badge pro" id="proBadge" onclick="openStore()">Nova Pro</div>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <button class="icon-btn" id="menuBtn" aria-label="Меню">☰</button>
+      <div class="brand">
+        <span class="brand-title">Nova AI</span>
+        <span class="brand-sub">Nova Labs</span>
+      </div>
     </div>
+    <div class="quota-badge" id="quotaBadge">Загрузка...</div>
   </header>
 
-  <div class="model-bar" id="modelBar">
-    <div class="model-chip active" data-model="gemini-2.5-flash">⚡ Nova Flash</div>
-    <div class="model-chip" data-model="gemini-2.5-flash-lite">🍃 Nova Lite</div>
-    <div class="model-chip" data-model="gemini-2.5-pro">👑 Nova Pro</div>
-    <div class="model-chip" data-model="gemini-2.0-flash">🧠 Nova 2.0</div>
-    <div class="model-chip" data-model="gemini-2.0-pro-exp">✨ Nova Ultra</div>
-  </div>
-
-  <div id="chat">
-    <div class="welcome" id="welcome">
-      <h1>Привет! Я Nova</h1>
-      <p>Задай любой вопрос, попроси написать код, текст или решить задачу.</p>
+  <!-- Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-header">
+      <strong>История чатов</strong>
+      <button class="icon-btn" id="closeDrawerBtn">✕</button>
     </div>
-  </div>
+    <button class="new-chat-btn" id="newChatBtn">+ Новый чат</button>
+    <div class="chat-list-label">Ваши диалоги</div>
+    <div class="chat-list" id="chatList"></div>
+    <div class="drawer-footer">
+      <button class="admin-open-btn" id="openAdminBtn">⚙ Админ-панель Nova Labs</button>
+      <div style="font-size: 11px; color: var(--text-secondary); text-align: center;" id="userInfoLabel">
+        Гостевой режим
+      </div>
+    </div>
+  </aside>
 
-  <div class="input-wrap">
+  <!-- Chat Messages -->
+  <main class="chat-container" id="chatContainer"></main>
+
+  <!-- Input Bar -->
+  <div class="input-wrapper">
     <div class="input-box">
-      <textarea id="prompt" rows="1" placeholder="Спросите Nova..."></textarea>
-      <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+      <textarea id="promptInput" rows="1" placeholder="Напишите запрос для Nova AI..."></textarea>
+      <div class="input-controls">
+        <select class="model-select" id="modelSelect">
+          <option value="flash">⚡ Nova Flash</option>
+          <option value="lite">🪶 Nova Lite</option>
+          <option value="pro">🧠 Nova Pro</option>
+        </select>
+        <button class="send-btn" id="sendBtn">Отправить</button>
+      </div>
     </div>
   </div>
 
-  <!-- Окно магазина Nova Pro и токенов -->
-  <div class="modal" id="storeModal" onclick="if(event.target===this) closeStore()">
-    <div class="sheet">
-      <h2>Улучшите до Nova Pro</h2>
-      <p id="statusText">Базовый тариф: 20 запросов в день</p>
-
-      <div class="plan-card featured">
-        <div class="plan-top">
-          <span class="plan-title">👑 Подписка Nova Pro (30 дней)</span>
-          <span class="plan-price">200 ⭐️</span>
-        </div>
-        <div class="plan-desc">Доступ ко всем 5 моделям (включая Nova Pro и Ultra), x2 дневной лимит запросов и приоритетная скорость.</div>
-        <button class="buy-btn" onclick="buy('pro')">Оформить за 200 Stars</button>
+  <!-- Admin Modal -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Админ-панель</h3>
+        <button class="icon-btn" id="closeAdminBtn">✕</button>
       </div>
-
-      <div class="plan-card">
-        <div class="plan-top">
-          <span class="plan-title">🪙 Пакет +100 токенов</span>
-          <span class="plan-price">50 ⭐️</span>
-        </div>
-        <div class="plan-desc">Не сгорают! Тратьте на запросы к любым Pro-моделям или сверх дневного лимита.</div>
-        <button class="buy-btn secondary" onclick="buy('tokens')">Купить за 50 Stars</button>
+      <input type="text" id="adminTargetInput" placeholder="Telegram ID или @username" />
+      <div class="admin-actions">
+        <button class="admin-btn btn-grant" onclick="runAdminAction('grant_unlimited')">Выдать безлимит ∞</button>
+        <button class="admin-btn btn-reset" onclick="runAdminAction('reset_limit')">Сбросить лимит на 20</button>
+        <button class="admin-btn btn-revoke" onclick="runAdminAction('revoke_unlimited')">Отключить безлимит</button>
       </div>
-
-      <button class="close-btn" onclick="closeStore()">Закрыть</button>
+      <div class="admin-status" id="adminStatusText"></div>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const WORKER_URL = "https://nova-proxy.sorokinartem870.workers.dev";
-    const GEMINI_KEY = "AQ.Ab8RN6L42P6TxEO82OyFIQiPAETc2UHdpoKIZnZe9cbRLOd9Dg";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAcE3-ckyIQHUEnoeUra3pcHmHEbw5MFYI",
-      authDomain: "nova-ai-db-d8f7b.firebaseapp.com",
-      projectId: "nova-ai-db-d8f7b",
-      storageBucket: "nova-ai-db-d8f7b.firebasestorage.app",
-      messagingSenderId: "193144143757",
-      appId: "1:193144143757:web:db4f61b1179c03fd8b87c4"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
+  <script>
+    const WORKER_URL = 'https://nova-proxy.sorokinartem870.workers.dev';
     const tg = window.Telegram?.WebApp;
+
     if (tg) {
       tg.ready();
       tg.expand();
     }
 
-    const userId = String(tg?.initDataUnsafe?.user?.id || "guest_local");
-    let currentModel = "gemini-2.5-flash";
-    let history = [];
+    const initData = tg?.initData || '';
+    let chats = JSON.parse(localStorage.getItem('nova_chats_v2') || '[]');
+    let currentChatId = null;
+    let isSending = false;
 
-    // Переключение моделей
-    document.querySelectorAll(".model-chip").forEach(chip => {
-      chip.onclick = () => {
-        document.querySelectorAll(".model-chip").forEach(c => c.classList.remove("active"));
-        chip.classList.add("active");
-        currentModel = chip.dataset.model;
-      };
+    const chatContainer = document.getElementById('chatContainer');
+    const chatList = document.getElementById('chatList');
+    const promptInput = document.getElementById('promptInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const modelSelect = document.getElementById('modelSelect');
+    const quotaBadge = document.getElementById('quotaBadge');
+    const openAdminBtn = document.getElementById('openAdminBtn');
+    const userInfoLabel = document.getElementById('userInfoLabel');
+
+    // Drawer controls
+    const drawer = document.getElementById('drawer');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    const toggleDrawer = (open) => {
+      drawer.classList.toggle('open', open);
+      drawerOverlay.classList.toggle('open', open);
+    };
+    document.getElementById('menuBtn').onclick = () => toggleDrawer(true);
+    document.getElementById('closeDrawerBtn').onclick = () => toggleDrawer(false);
+    drawerOverlay.onclick = () => toggleDrawer(false);
+
+    // Admin Modal controls
+    const adminModal = document.getElementById('adminModal');
+    openAdminBtn.onclick = () => {
+      toggleDrawer(false);
+      adminModal.classList.add('open');
+    };
+    document.getElementById('closeAdminBtn').onclick = () => adminModal.classList.remove('open');
+
+    // Auto-resize textarea
+    promptInput.addEventListener('input', () => {
+      promptInput.style.height = 'auto';
+      promptInput.style.height = Math.min(promptInput.scrollHeight, 110) + 'px';
     });
 
-    // Автовысота поля ввода
-    const promptEl = document.getElementById("prompt");
-    promptEl.addEventListener("input", () => {
-      promptEl.style.height = "auto";
-      promptEl.style.height = promptEl.scrollHeight + "px";
-    });
-    promptEl.addEventListener("keydown", e => {
-      if (e.key === "Enter" && !e.shiftKey) {
+    promptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        window.sendMessage();
+        sendMessage();
       }
     });
 
-    function addBubble(text, role) {
-      const welcome = document.getElementById("welcome");
-      if (welcome) welcome.remove();
-      const div = document.createElement("div");
-      div.className = `msg ${role}`;
-      div.textContent = text;
-      const chat = document.getElementById("chat");
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-      return div;
+    sendBtn.onclick = () => sendMessage();
+    document.getElementById('newChatBtn').onclick = () => {
+      createNewChat();
+      toggleDrawer(false);
+    };
+
+    function saveChats() {
+      localStorage.setItem('nova_chats_v2', JSON.stringify(chats));
     }
 
-    // Загрузка статуса подписки и истории
-    async function refreshStatus() {
+    function createNewChat() {
+      const id = 'chat_' + Date.now();
+      chats.unshift({ id, title: 'Новый диалог', messages: [] });
+      currentChatId = id;
+      saveChats();
+      renderChatList();
+      renderMessages();
+    }
+
+    function deleteChat(id, e) {
+      e.stopPropagation();
+      chats = chats.filter(c => c.id !== id);
+      if (currentChatId === id) {
+        currentChatId = chats[0]?.id || null;
+      }
+      if (!currentChatId) {
+        createNewChat();
+      } else {
+        saveChats();
+        renderChatList();
+        renderMessages();
+      }
+    }
+
+    function renderChatList() {
+      chatList.innerHTML = '';
+      chats.forEach(chat => {
+        const div = document.createElement('div');
+        div.className = 'chat-item' + (chat.id === currentChatId ? ' active' : '');
+        div.onclick = () => {
+          currentChatId = chat.id;
+          renderChatList();
+          renderMessages();
+          toggleDrawer(false);
+        };
+
+        const span = document.createElement('span');
+        span.className = 'chat-item-title';
+        span.textContent = chat.title;
+
+        const del = document.createElement('button');
+        del.className = 'chat-delete';
+        del.textContent = '🗑';
+        del.onclick = (e) => deleteChat(chat.id, e);
+
+        div.appendChild(span);
+        div.appendChild(del);
+        chatList.appendChild(div);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function formatMarkdown(text) {
+      const codeBlocks = [];
+      let processed = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        const idx = codeBlocks.length;
+        const cleanCode = escapeHtml(code.trim());
+        const label = lang ? escapeHtml(lang) : 'code';
+        codeBlocks.push(`
+          <div class="code-block-wrap">
+            <div class="code-block-header">
+              <span>${label}</span>
+              <button class="copy-code-btn" onclick="copyCodeBlock(this)">Копировать</button>
+            </div>
+            <pre><code>${cleanCode}</code></pre>
+          </div>
+        `);
+        return `@@CODEBLOCK_${idx}@@`;
+      });
+
+      processed = escapeHtml(processed);
+      processed = processed.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+      processed = processed.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      processed = processed.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+      processed = processed.replace(/^###\s+(.+)$/gm, '<h4>$1</h4>');
+      processed = processed.replace(/^##\s+(.+)$/gm, '<h3>$1</h3>');
+
+      const lines = processed.split('\n');
+      let html = '';
+      let inList = false;
+
+      for (let line of lines) {
+        if (line.startsWith('@@CODEBLOCK_')) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += line;
+          continue;
+        }
+        const listMatch = line.match(/^\s*[-*•]\s+(.+)/);
+        if (listMatch) {
+          if (!inList) { html += '<ul>'; inList = true; }
+          html += `<li>${listMatch[1]}</li>`;
+        } else {
+          if (inList) { html += '</ul>'; inList = false; }
+          if (line.trim() === '') {
+            html += '<br>';
+          } else if (line.startsWith('<h3>') || line.startsWith('<h4>')) {
+            html += line;
+          } else {
+            html += `<p>${line}</p>`;
+          }
+        }
+      }
+      if (inList) html += '</ul>';
+
+      codeBlocks.forEach((block, i) => {
+        html = html.replace(`@@CODEBLOCK_${i}@@`, block);
+      });
+
+      return html;
+    }
+
+    window.copyCodeBlock = function(btn) {
+      const codeEl = btn.closest('.code-block-wrap').querySelector('code');
+      if (!codeEl) return;
+      navigator.clipboard.writeText(codeEl.innerText).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Скопировано!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      });
+    };
+
+    window.useSuggestion = function(promptText) {
+      promptInput.value = promptText;
+      sendMessage(promptText);
+    };
+
+    function renderMessages() {
+      const chat = chats.find(c => c.id === currentChatId);
+      chatContainer.innerHTML = '';
+
+      if (!chat || chat.messages.length === 0) {
+        chatContainer.innerHTML = `
+          <div class="welcome">
+            <div class="welcome-logo">✦</div>
+            <h2>Nova AI</h2>
+            <p>Интеллектуальный помощник от студии Nova Labs. Выберите подсказку или задайте свой вопрос.</p>
+            <div class="suggestions-grid">
+              <div class="suggestion-card" onclick="useSuggestion('Придумай 5 креативных идей для нового проекта в Telegram')">
+                <span class="suggestion-title">💡 Идеи для проекта</span>
+                <span class="suggestion-desc">Свежие концепции для запуска в Telegram</span>
+              </div>
+              <div class="suggestion-card" onclick="useSuggestion('Напиши простой и чистый скрипт на Python для парсинга данных')">
+                <span class="suggestion-title">💻 Написать код</span>
+                <span class="suggestion-desc">Рабочий пример с пояснениями</span>
+              </div>
+              <div class="suggestion-card" onclick="useSuggestion('Объясни простыми словами, как работают нейросети и токены')">
+                <span class="suggestion-title">🧠 Простыми словами</span>
+                <span class="suggestion-desc">Разбор сложной темы за 1 минуту</span>
+              </div>
+              <div class="suggestion-card" onclick="useSuggestion('Составь продающий пост-анонс для запуска AI-сервиса')">
+                <span class="suggestion-title">✍️ Текст и посты</span>
+                <span class="suggestion-desc">Цепляющий анонс для канала</span>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      chat.messages.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'msg ' + m.role;
+        if (m.role === 'assistant') {
+          div.innerHTML = formatMarkdown(m.text);
+        } else {
+          div.textContent = m.text;
+        }
+        chatContainer.appendChild(div);
+      });
+
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function updateStatusUI(status) {
+      if (!status) return;
+      if (status.isUnlimited) {
+        quotaBadge.textContent = status.isAdmin ? 'Admin ∞' : 'Безлимит ∞';
+        quotaBadge.classList.add('unlimited');
+      } else {
+        quotaBadge.textContent = `${status.remaining} / ${status.limit}`;
+        quotaBadge.classList.remove('unlimited');
+      }
+
+      if (status.isAdmin) {
+        openAdminBtn.style.display = 'block';
+      }
+
+      if (status.userId) {
+        userInfoLabel.textContent = `ID: ${status.userId}` + (status.username ? ` (@${status.username})` : '');
+      }
+    }
+
+    async function fetchUserStatus() {
       try {
-        const res = await fetch(`${WORKER_URL}/status`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId })
+        const res = await fetch(`${WORKER_URL}/api/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Telegram-Init-Data': initData
+          }
         });
         const data = await res.json();
-        const limit = data.isPro ? 40 : 20;
-        const left = Math.max(0, limit - (data.dailyCount || 0));
-        document.getElementById("quotaBadge").textContent = `⚡ ${left}/${limit} | 🪙 ${data.tokens || 0}`;
-        document.getElementById("proBadge").textContent = data.isPro ? "👑 PRO" : "Nova Pro";
-        document.getElementById("statusText").textContent = data.isPro
-          ? `Подписка активна до ${new Date(data.proUntil).toLocaleDateString()} • Токенов: ${data.tokens}`
-          : `Бесплатный план • Осталось запросов сегодня: ${left} • Токенов: ${data.tokens}`;
+        updateStatusUI(data);
       } catch (e) {
-        document.getElementById("quotaBadge").textContent = "Онлайн";
+        quotaBadge.textContent = 'Онлайн';
       }
     }
 
-    async function loadHistory() {
+    async function sendMessage(overrideText) {
+      const text = (typeof overrideText === 'string' ? overrideText : promptInput.value).trim();
+      if (!text || isSending) return;
+
+      let chat = chats.find(c => c.id === currentChatId);
+      if (!chat) {
+        createNewChat();
+        chat = chats.find(c => c.id === currentChatId);
+      }
+
+      if (chat.messages.length === 0) {
+        chat.title = text.slice(0, 32) + (text.length > 32 ? '...' : '');
+      }
+
+      chat.messages.push({ role: 'user', text });
+      promptInput.value = '';
+      promptInput.style.height = 'auto';
+      saveChats();
+      renderChatList();
+      renderMessages();
+
+      isSending = true;
+      sendBtn.disabled = true;
+
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'msg assistant';
+      loadingDiv.textContent = 'Думаю...';
+      chatContainer.appendChild(loadingDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
       try {
-        const snap = await getDoc(doc(db, "chats", userId));
-        if (snap.exists() && Array.isArray(snap.data().messages)) {
-          history = snap.data().messages.slice(-20);
-          history.forEach(m => addBubble(m.parts[0].text, m.role === "user" ? "user" : "ai"));
-        }
-      } catch (_) {}
-    }
+        const contents = chat.messages
+          .filter(m => m.role === 'user' || m.role === 'assistant')
+          .map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.text }]
+          }));
 
-    async function saveHistory() {
-      try {
-        await setDoc(doc(db, "chats", userId), { messages: history.slice(-20) });
-      } catch (_) {}
-    }
-
-    window.sendMessage = async function() {
-      const text = promptEl.value.trim();
-      if (!text) return;
-      promptEl.value = "";
-      promptEl.style.height = "auto";
-      document.getElementById("sendBtn").disabled = true;
-
-      addBubble(text, "user");
-      history.push({ role: "user", parts: [{ text }] });
-      const aiBubble = addBubble("Думаю...", "ai");
-
-      try {
-        const res = await fetch(`${WORKER_URL}/chat`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch(`${WORKER_URL}/api/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Telegram-Init-Data': initData
+          },
           body: JSON.stringify({
-            userId,
-            model: currentModel,
-            contents: history,
-            apiKey: GEMINI_KEY
+            model: modelSelect.value,
+            contents
           })
         });
-        const data = await res.json();
+
+        const payload = await res.json();
+        loadingDiv.remove();
+
         if (!res.ok) {
-          aiBubble.classList.add("error");
-          aiBubble.textContent = data.error || "Ошибка запроса";
-          history.pop();
-          if (res.status === 403 || res.status === 429) window.openStore();
-        } else {
-          const reply = data.result?.candidates?.[0]?.content?.parts?.[0]?.text || "Нет ответа от модели.";
-          aiBubble.textContent = reply;
-          history.push({ role: "model", parts: [{ text: reply }] });
-          saveHistory();
-          refreshStatus();
+          throw new Error(payload.error || 'Ошибка сервера');
+        }
+
+        const replyText = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Пустой ответ от модели.';
+        chat.messages.push({ role: 'assistant', text: replyText });
+        saveChats();
+        renderMessages();
+
+        if (payload.status) {
+          updateStatusUI(payload.status);
         }
       } catch (err) {
-        aiBubble.classList.add("error");
-        aiBubble.textContent = "Ошибка соединения с сервером.";
-        history.pop();
+        loadingDiv.remove();
+        const errDiv = document.createElement('div');
+        errDiv.className = 'msg error';
+        errDiv.textContent = err.message;
+        chatContainer.appendChild(errDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
       } finally {
-        document.getElementById("sendBtn").disabled = false;
+        isSending = false;
+        sendBtn.disabled = false;
       }
-    };
+    }
 
-    window.openStore = () => document.getElementById("storeModal").classList.add("open");
-    window.closeStore = () => document.getElementById("storeModal").classList.remove("open");
-
-    window.buy = async function(type) {
+    async function runAdminAction(action) {
+      const target = document.getElementById('adminTargetInput').value.trim();
+      const statusEl = document.getElementById('adminStatusText');
+      if (!target) {
+        statusEl.textContent = 'Введите ID или @username';
+        return;
+      }
+      statusEl.textContent = 'Выполняю...';
       try {
-        const res = await fetch(`${WORKER_URL}/invoice`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type })
+        const res = await fetch(`${WORKER_URL}/api/admin`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Telegram-Init-Data': initData
+          },
+          body: JSON.stringify({ action, target })
         });
         const data = await res.json();
-        if (data.ok && data.result && tg?.openInvoice) {
-          tg.openInvoice(data.result, status => {
-            if (status === "paid") {
-              refreshStatus();
-              window.closeStore();
-            }
-          });
-        } else {
-          alert("Откройте приложение внутри Telegram для оплаты Stars.");
-        }
+        if (!res.ok) throw new Error(data.error || 'Ошибка');
+        statusEl.textContent = data.message;
       } catch (e) {
-        alert("Не удалось создать счёт.");
+        statusEl.textContent = e.message;
       }
-    };
+    }
 
-    refreshStatus();
-    loadHistory();
+    // Init
+    if (chats.length === 0) {
+      createNewChat();
+    } else {
+      currentChatId = chats[0].id;
+      renderChatList();
+      renderMessages();
+    }
+    fetchUserStatus();
   </script>
 </body>
 </html>
