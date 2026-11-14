@@ -246,11 +246,29 @@
 
     .pro-promo-btn {
       width: 100%;
-      padding: 10px;
+      padding: 11px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--accent);
       color: var(--accent-text);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .pro-promo-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .secondary-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
@@ -368,6 +386,15 @@
       color: #ffffff;
       border-bottom-right-radius: 4px;
       white-space: pre-wrap;
+    }
+
+    .msg-image {
+      max-width: 210px;
+      max-height: 210px;
+      border-radius: 9px;
+      display: block;
+      margin-bottom: 6px;
+      border: 1px solid var(--border);
     }
 
     .msg.assistant {
@@ -495,7 +522,7 @@
       40% { transform: scale(1); opacity: 1; }
     }
 
-    /* Input Bar & Custom Model Pill */
+    /* Input Bar & Image Preview */
     .input-wrapper {
       padding: 10px 12px 14px;
       background: var(--bg-secondary);
@@ -517,6 +544,35 @@
       border-color: #52525b;
     }
 
+    .attach-preview {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+
+    .attach-preview.active {
+      display: flex;
+    }
+
+    .attach-preview-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .attach-thumb {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
     textarea {
       width: 100%;
       background: transparent;
@@ -533,6 +589,26 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+    }
+
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .attach-btn {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
     }
 
     .model-trigger-btn {
@@ -742,7 +818,7 @@
 
     .modal {
       width: 100%;
-      max-width: 360px;
+      max-width: 370px;
       background: var(--bg-secondary);
       border: 1px solid var(--border);
       border-radius: 16px;
@@ -777,7 +853,7 @@
       display: flex;
       flex-direction: column;
       gap: 9px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       font-size: 13px;
       color: var(--text-primary);
     }
@@ -785,6 +861,34 @@
     .pro-features li {
       display: flex;
       align-items: center;
+      gap: 8px;
+    }
+
+    .id-copy-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 11px;
+      margin-bottom: 14px;
+      font-size: 12px;
+    }
+
+    .copy-id-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 7px;
+      padding: 4px 9px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .pro-actions-stack {
+      display: flex;
+      flex-direction: column;
       gap: 8px;
     }
 
@@ -842,7 +946,7 @@
     <div class="chat-list-label">Ваши диалоги</div>
     <div class="chat-list" id="chatList"></div>
     <div class="drawer-footer">
-      <button class="pro-promo-btn" id="drawerProBtn" onclick="openProModal()">Подписка Nova Pro</button>
+      <button class="pro-promo-btn" id="drawerProBtn" onclick="openProModal()">✦ Подписка Nova Pro</button>
       <button class="admin-open-btn" id="openAdminBtn">Админ-панель Nova Labs</button>
       <div style="font-size: 11px; color: var(--text-secondary); text-align: center;" id="userInfoLabel">
         Гостевой режим
@@ -856,13 +960,24 @@
   <!-- Input Bar -->
   <div class="input-wrapper">
     <div class="input-box">
+      <div class="attach-preview" id="attachPreview">
+        <div class="attach-preview-left">
+          <img id="attachThumb" class="attach-thumb" src="" alt="preview" />
+          <span id="attachName" style="color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Фото прикреплено</span>
+        </div>
+        <button type="button" class="chat-delete" onclick="clearAttachment()">✕</button>
+      </div>
       <textarea id="promptInput" rows="1" placeholder="Напишите запрос для Nova AI..."></textarea>
+      <input type="file" id="imageInput" accept="image/*" style="display: none;" />
       <div class="input-controls">
-        <button type="button" class="model-trigger-btn" id="modelTriggerBtn">
-          <span id="currentModelIcon">⚡</span>
-          <span id="currentModelLabel">Nova Flash</span>
-          <span class="model-chevron">▾</span>
-        </button>
+        <div class="controls-left">
+          <button type="button" class="attach-btn" id="attachBtn" title="Прикрепить изображение">📎</button>
+          <button type="button" class="model-trigger-btn" id="modelTriggerBtn">
+            <span id="currentModelIcon">⚡</span>
+            <span id="currentModelLabel">Nova Flash</span>
+            <span class="model-chevron">▾</span>
+          </button>
+        </div>
         <button class="send-btn" id="sendBtn" type="button">Отправить</button>
       </div>
     </div>
@@ -918,23 +1033,34 @@
     </div>
   </div>
 
-  <!-- Pro Info Modal -->
+  <!-- Pro Purchase Modal -->
   <div class="modal-overlay" id="proModal">
     <div class="modal">
       <div class="modal-header">
-        <h3>Подписка Nova Pro</h3>
+        <h3>✦ Подписка Nova Pro</h3>
         <button class="icon-btn" onclick="closeProModal()">✕</button>
       </div>
       <ul class="pro-features">
         <li>• <strong>Безлимитные запросы</strong> без ограничения в 20 сообщений</li>
         <li>• <strong>Модель Nova Pro</strong> для сложных аналитических задач</li>
         <li>• <strong>Написание и разбор кода</strong> на любых языках</li>
-        <li>• <strong>Распознавание изображений</strong> и документов</li>
+        <li>• <strong>Распознавание изображений</strong> и фотографий (📎)</li>
       </ul>
-      <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
-        Ваш ID для активации подписки: <strong id="modalUserId" style="color: #fff;">—</strong>
+
+      <div class="id-copy-box">
+        <span>Ваш ID: <strong id="modalUserId" style="color: #fff;">—</strong></span>
+        <button type="button" class="copy-id-btn" id="copyIdBtn" onclick="copyUserId()">Скопировать ID</button>
       </div>
-      <button class="pro-promo-btn" onclick="closeProModal()">Понятно</button>
+
+      <div class="pro-actions-stack">
+        <button type="button" class="pro-promo-btn" id="buyStarsBtn" onclick="buyWithStars()">
+          ⭐ Купить Nova Pro за 100 Stars
+        </button>
+        <button type="button" class="secondary-btn" onclick="contactAdminForPro()">
+          💬 Оформить через администратора
+        </button>
+      </div>
+      <div class="admin-status" id="proStatusText"></div>
     </div>
   </div>
 
@@ -973,6 +1099,8 @@
     let selectedModel = 'flash';
     let isSending = false;
     let userIsPro = false;
+    let currentUserId = unsafeUser?.id ? String(unsafeUser.id) : '';
+    let attachedImage = null; // { mimeType, data, previewUrl, name }
 
     const MODEL_META = {
       flash: { icon: '⚡', label: 'Nova Flash' },
@@ -989,6 +1117,12 @@
     const userInfoLabel = document.getElementById('userInfoLabel');
     const modalUserId = document.getElementById('modalUserId');
     const proTagBadge = document.getElementById('proTagBadge');
+    const buyStarsBtn = document.getElementById('buyStarsBtn');
+    const proStatusText = document.getElementById('proStatusText');
+    const imageInput = document.getElementById('imageInput');
+    const attachPreview = document.getElementById('attachPreview');
+    const attachThumb = document.getElementById('attachThumb');
+    const attachName = document.getElementById('attachName');
 
     // Bottom Sheet Model Selector controls
     const modelSheet = document.getElementById('modelSheet');
@@ -1019,6 +1153,42 @@
       toggleModelSheet(false);
     };
 
+    // Image Attachment (Pro Only)
+    document.getElementById('attachBtn').onclick = () => {
+      if (!userIsPro) {
+        openProModal();
+        return;
+      }
+      imageInput.click();
+    };
+
+    imageInput.onchange = (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const resultStr = String(reader.result || '');
+        const base64Data = resultStr.split(',')[1];
+        if (!base64Data) return;
+        attachedImage = {
+          mimeType: file.type || 'image/jpeg',
+          data: base64Data,
+          previewUrl: resultStr,
+          name: file.name || 'Изображение'
+        };
+        attachThumb.src = resultStr;
+        attachName.textContent = attachedImage.name;
+        attachPreview.classList.add('active');
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.clearAttachment = () => {
+      attachedImage = null;
+      imageInput.value = '';
+      attachPreview.classList.remove('active');
+    };
+
     // Drawer controls
     const drawer = document.getElementById('drawer');
     const drawerOverlay = document.getElementById('drawerOverlay');
@@ -1030,13 +1200,80 @@
     document.getElementById('closeDrawerBtn').onclick = () => toggleDrawer(false);
     drawerOverlay.onclick = () => toggleDrawer(false);
 
-    // Pro Modal
+    // Pro Modal & Real Purchase
     const proModal = document.getElementById('proModal');
     window.openProModal = () => {
       toggleDrawer(false);
+      proStatusText.textContent = userIsPro ? 'У вас уже активна подписка Nova Pro ∞' : '';
       proModal.classList.add('open');
     };
     window.closeProModal = () => proModal.classList.remove('open');
+
+    window.copyUserId = () => {
+      const idToCopy = currentUserId || modalUserId.textContent;
+      if (!idToCopy || idToCopy === '—') return;
+      navigator.clipboard.writeText(idToCopy).then(() => {
+        const btn = document.getElementById('copyIdBtn');
+        btn.textContent = 'Скопировано!';
+        setTimeout(() => { btn.textContent = 'Скопировать ID'; }, 1500);
+      });
+    };
+
+    window.buyWithStars = async () => {
+      proStatusText.textContent = 'Создаём счёт Telegram Stars...';
+      buyStarsBtn.disabled = true;
+      try {
+        const res = await fetch(`${WORKER_URL}/api/create-invoice`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Telegram-Init-Data': initData
+          },
+          body: JSON.stringify({ userId: currentUserId })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.invoiceLink) {
+          throw new Error(data.error || 'Не удалось создать счёт на оплату');
+        }
+
+        proStatusText.textContent = '';
+        if (tg && typeof tg.openInvoice === 'function') {
+          tg.openInvoice(data.invoiceLink, (status) => {
+            if (status === 'paid') {
+              proStatusText.textContent = 'Оплата прошла успешно! Активируем Nova Pro...';
+              setTimeout(() => {
+                fetchUserStatus();
+                closeProModal();
+              }, 1200);
+            } else if (status === 'cancelled') {
+              proStatusText.textContent = 'Оплата отменена.';
+            } else if (status === 'failed') {
+              proStatusText.textContent = 'Ошибка при проведении платежа.';
+            }
+          });
+        } else {
+          window.open(data.invoiceLink, '_blank');
+        }
+      } catch (err) {
+        proStatusText.textContent = err.message;
+      } finally {
+        buyStarsBtn.disabled = false;
+      }
+    };
+
+    window.contactAdminForPro = () => {
+      const idStr = currentUserId || 'не определён';
+      if (navigator.clipboard && currentUserId) {
+        navigator.clipboard.writeText(currentUserId).catch(() => {});
+      }
+      const adminDeepLink = `tg://user?id=${ADMIN_ID}`;
+      if (tg && typeof tg.openTelegramLink === 'function') {
+        tg.openTelegramLink(adminDeepLink);
+      } else {
+        window.open(adminDeepLink, '_blank');
+      }
+      proStatusText.textContent = `Ваш ID (${idStr}) скопирован — отправьте его администратору.`;
+    };
 
     // Admin Modal controls
     const adminModal = document.getElementById('adminModal');
@@ -1242,7 +1479,15 @@
         if (m.role === 'assistant') {
           div.innerHTML = formatMarkdown(m.text);
         } else {
-          div.textContent = m.text;
+          if (m.imagePreview) {
+            const img = document.createElement('img');
+            img.src = m.imagePreview;
+            img.className = 'msg-image';
+            div.appendChild(img);
+          }
+          const span = document.createElement('span');
+          span.textContent = m.text;
+          div.appendChild(span);
         }
         chatContainer.appendChild(div);
       });
@@ -1253,6 +1498,7 @@
     function applyInitialTelegramUser() {
       if (!unsafeUser) return;
       const uid = String(unsafeUser.id);
+      currentUserId = uid;
       userInfoLabel.textContent = `ID: ${uid}` + (unsafeUser.username ? ` (@${unsafeUser.username})` : '');
       modalUserId.textContent = uid;
 
@@ -1269,6 +1515,10 @@
       if (!status) return;
       userIsPro = Boolean(status.isUnlimited || status.isAdmin);
 
+      if (status.priceStars) {
+        buyStarsBtn.textContent = `⭐ Купить Nova Pro за ${status.priceStars} Stars`;
+      }
+
       if (userIsPro) {
         quotaBadge.textContent = status.isAdmin ? 'Admin ∞' : 'Nova Pro ∞';
         quotaBadge.classList.add('unlimited');
@@ -1284,6 +1534,7 @@
       }
 
       if (status.userId) {
+        currentUserId = String(status.userId);
         userInfoLabel.textContent = `ID: ${status.userId}` + (status.username ? ` (@${status.username})` : '');
         modalUserId.textContent = status.userId;
       }
@@ -1310,7 +1561,7 @@
 
     async function sendMessage(overrideText) {
       const rawText = (typeof overrideText === 'string') ? overrideText : promptInput.value;
-      const text = String(rawText || '').trim();
+      const text = String(rawText || '').trim() || (attachedImage ? 'Опиши это изображение' : '');
       if (!text || isSending) return;
 
       let chat = chats.find(c => c.id === currentChatId);
@@ -1323,9 +1574,16 @@
         chat.title = text.slice(0, 32) + (text.length > 32 ? '...' : '');
       }
 
-      chat.messages.push({ role: 'user', text });
+      const currentAttachment = attachedImage;
+      chat.messages.push({
+        role: 'user',
+        text,
+        imagePreview: currentAttachment ? currentAttachment.previewUrl : null
+      });
+
       promptInput.value = '';
       promptInput.style.height = 'auto';
+      clearAttachment();
       saveChats();
       renderChatList();
       renderMessages();
@@ -1343,13 +1601,25 @@
       const timeoutId = setTimeout(() => controller.abort(), 32000);
 
       try {
-        const contents = chat.messages
+        const historySlice = chat.messages
           .filter(m => m.role === 'user' || m.role === 'assistant')
-          .slice(-10)
-          .map(m => ({
+          .slice(-10);
+
+        const contents = historySlice.map((m, idx) => {
+          const parts = [{ text: m.text }];
+          if (idx === historySlice.length - 1 && currentAttachment) {
+            parts.push({
+              inlineData: {
+                mimeType: currentAttachment.mimeType,
+                data: currentAttachment.data
+              }
+            });
+          }
+          return {
             role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.text }]
-          }));
+            parts
+          };
+        });
 
         const res = await fetch(`${WORKER_URL}/api/chat`, {
           method: 'POST',
@@ -1384,7 +1654,6 @@
         clearTimeout(timeoutId);
         loadingDiv.remove();
 
-        // Убираем неотвеченное сообщение из истории, чтобы оно не мешало следующей попытке
         chat.messages.pop();
         saveChats();
 
@@ -1399,7 +1668,7 @@
         if (err.status === 402 || err.status === 403) {
           const btn = document.createElement('button');
           btn.className = 'upgrade-inline-btn';
-          btn.textContent = 'Подробнее о Nova Pro';
+          btn.textContent = 'Купить Nova Pro';
           btn.onclick = openProModal;
           errDiv.appendChild(btn);
         }
