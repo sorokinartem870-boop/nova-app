@@ -495,7 +495,7 @@
       40% { transform: scale(1); opacity: 1; }
     }
 
-    /* Input Bar */
+    /* Input Bar & Custom Model Pill */
     .input-wrapper {
       padding: 10px 12px 14px;
       background: var(--bg-secondary);
@@ -535,15 +535,27 @@
       justify-content: space-between;
     }
 
-    .model-select {
+    .model-trigger-btn {
       background: var(--bg-secondary);
       color: var(--text-primary);
       border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 6px 9px;
-      font-size: 12px;
-      font-weight: 500;
-      outline: none;
+      border-radius: 10px;
+      padding: 6px 11px;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .model-trigger-btn:active {
+      background: #27272a;
+    }
+
+    .model-chevron {
+      font-size: 10px;
+      color: var(--text-secondary);
     }
 
     .send-btn {
@@ -566,6 +578,152 @@
       cursor: not-allowed;
     }
 
+    /* Bottom Sheet Model Selector */
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 55;
+    }
+
+    .sheet-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .model-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      padding: 12px 16px 24px;
+      transform: translateY(100%);
+      transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 60;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .model-sheet.open {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 99px;
+      background: #3f3f46;
+      margin: 0 auto 14px;
+    }
+
+    .sheet-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      padding: 0 2px;
+    }
+
+    .model-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .model-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 12px 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .model-card.selected {
+      border-color: var(--accent);
+      background: #27272a;
+    }
+
+    .model-card-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .model-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .model-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .model-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .model-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .model-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #3f3f46;
+      color: #f4f4f5;
+      letter-spacing: 0.3px;
+    }
+
+    .model-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.35;
+    }
+
+    .model-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid #52525b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+      color: var(--accent-text);
+    }
+
+    .model-card.selected .model-check {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
     /* Modals */
     .modal-overlay {
       position: fixed;
@@ -575,7 +733,7 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
-      z-index: 60;
+      z-index: 70;
     }
 
     .modal-overlay.open {
@@ -700,13 +858,63 @@
     <div class="input-box">
       <textarea id="promptInput" rows="1" placeholder="Напишите запрос для Nova AI..."></textarea>
       <div class="input-controls">
-        <select class="model-select" id="modelSelect">
-          <option value="flash">Nova Flash</option>
-          <option value="lite">Nova Lite</option>
-          <option value="pro" id="proModelOption">Nova Pro 🔒</option>
-        </select>
+        <button type="button" class="model-trigger-btn" id="modelTriggerBtn">
+          <span id="currentModelIcon">⚡</span>
+          <span id="currentModelLabel">Nova Flash</span>
+          <span class="model-chevron">▾</span>
+        </button>
         <button class="send-btn" id="sendBtn" type="button">Отправить</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet: Model Selector -->
+  <div class="sheet-overlay" id="sheetOverlay"></div>
+  <div class="model-sheet" id="modelSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Выберите модель Nova</div>
+    <div class="model-cards">
+      <button type="button" class="model-card selected" data-model="flash" onclick="selectModel('flash')">
+        <div class="model-card-left">
+          <div class="model-icon">⚡</div>
+          <div class="model-info">
+            <div class="model-name-row">
+              <span class="model-name">Nova Flash</span>
+              <span class="model-tag">БАЗОВАЯ</span>
+            </div>
+            <span class="model-desc">Оптимальный баланс скорости и качества для любых повседневных задач</span>
+          </div>
+        </div>
+        <div class="model-check">✓</div>
+      </button>
+
+      <button type="button" class="model-card" data-model="lite" onclick="selectModel('lite')">
+        <div class="model-card-left">
+          <div class="model-icon">🪶</div>
+          <div class="model-info">
+            <div class="model-name-row">
+              <span class="model-name">Nova Lite</span>
+              <span class="model-tag">БЫСТРАЯ</span>
+            </div>
+            <span class="model-desc">Мгновенные ответы на простые вопросы, перевод и работа с текстом</span>
+          </div>
+        </div>
+        <div class="model-check"></div>
+      </button>
+
+      <button type="button" class="model-card" data-model="pro" onclick="selectModel('pro')">
+        <div class="model-card-left">
+          <div class="model-icon">🧠</div>
+          <div class="model-info">
+            <div class="model-name-row">
+              <span class="model-name">Nova Pro</span>
+              <span class="model-tag" id="proTagBadge">PRO 🔒</span>
+            </div>
+            <span class="model-desc">Максимальный интеллект: сложная аналитика, стратегии и генерация кода</span>
+          </div>
+        </div>
+        <div class="model-check"></div>
+      </button>
     </div>
   </div>
 
@@ -749,6 +957,7 @@
 
   <script>
     const WORKER_URL = 'https://nova-proxy.sorokinartem870.workers.dev';
+    const ADMIN_ID = '5546523537';
     const tg = window.Telegram?.WebApp;
 
     if (tg) {
@@ -757,21 +966,58 @@
     }
 
     const initData = tg?.initData || '';
+    const unsafeUser = tg?.initDataUnsafe?.user || null;
+
     let chats = JSON.parse(localStorage.getItem('nova_chats_v2') || '[]');
     let currentChatId = null;
+    let selectedModel = 'flash';
     let isSending = false;
     let userIsPro = false;
+
+    const MODEL_META = {
+      flash: { icon: '⚡', label: 'Nova Flash' },
+      lite: { icon: '🪶', label: 'Nova Lite' },
+      pro: { icon: '🧠', label: 'Nova Pro' }
+    };
 
     const chatContainer = document.getElementById('chatContainer');
     const chatList = document.getElementById('chatList');
     const promptInput = document.getElementById('promptInput');
     const sendBtn = document.getElementById('sendBtn');
-    const modelSelect = document.getElementById('modelSelect');
-    const proModelOption = document.getElementById('proModelOption');
     const quotaBadge = document.getElementById('quotaBadge');
     const openAdminBtn = document.getElementById('openAdminBtn');
     const userInfoLabel = document.getElementById('userInfoLabel');
     const modalUserId = document.getElementById('modalUserId');
+    const proTagBadge = document.getElementById('proTagBadge');
+
+    // Bottom Sheet Model Selector controls
+    const modelSheet = document.getElementById('modelSheet');
+    const sheetOverlay = document.getElementById('sheetOverlay');
+    const toggleModelSheet = (open) => {
+      modelSheet.classList.toggle('open', open);
+      sheetOverlay.classList.toggle('open', open);
+    };
+    document.getElementById('modelTriggerBtn').onclick = () => toggleModelSheet(true);
+    sheetOverlay.onclick = () => toggleModelSheet(false);
+
+    window.selectModel = (modelKey) => {
+      if (modelKey === 'pro' && !userIsPro) {
+        toggleModelSheet(false);
+        openProModal();
+        return;
+      }
+      selectedModel = modelKey;
+      document.getElementById('currentModelIcon').textContent = MODEL_META[modelKey].icon;
+      document.getElementById('currentModelLabel').textContent = MODEL_META[modelKey].label;
+
+      document.querySelectorAll('.model-card').forEach(card => {
+        const isSelected = card.dataset.model === modelKey;
+        card.classList.toggle('selected', isSelected);
+        card.querySelector('.model-check').textContent = isSelected ? '✓' : '';
+      });
+
+      toggleModelSheet(false);
+    };
 
     // Drawer controls
     const drawer = document.getElementById('drawer');
@@ -1004,6 +1250,21 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
+    function applyInitialTelegramUser() {
+      if (!unsafeUser) return;
+      const uid = String(unsafeUser.id);
+      userInfoLabel.textContent = `ID: ${uid}` + (unsafeUser.username ? ` (@${unsafeUser.username})` : '');
+      modalUserId.textContent = uid;
+
+      if (uid === ADMIN_ID) {
+        userIsPro = true;
+        quotaBadge.textContent = 'Admin ∞';
+        quotaBadge.classList.add('unlimited');
+        proTagBadge.textContent = 'PRO';
+        openAdminBtn.style.display = 'block';
+      }
+    }
+
     function updateStatusUI(status) {
       if (!status) return;
       userIsPro = Boolean(status.isUnlimited || status.isAdmin);
@@ -1011,11 +1272,11 @@
       if (userIsPro) {
         quotaBadge.textContent = status.isAdmin ? 'Admin ∞' : 'Nova Pro ∞';
         quotaBadge.classList.add('unlimited');
-        proModelOption.textContent = 'Nova Pro';
+        proTagBadge.textContent = 'PRO';
       } else {
         quotaBadge.textContent = `${status.remaining} / ${status.limit}`;
         quotaBadge.classList.remove('unlimited');
-        proModelOption.textContent = 'Nova Pro 🔒';
+        proTagBadge.textContent = 'PRO 🔒';
       }
 
       if (status.isAdmin) {
@@ -1037,10 +1298,13 @@
             'X-Telegram-Init-Data': initData
           }
         });
+        if (!res.ok) return;
         const data = await res.json();
         updateStatusUI(data);
       } catch (e) {
-        quotaBadge.textContent = 'Онлайн';
+        if (!unsafeUser) {
+          quotaBadge.textContent = 'Онлайн';
+        }
       }
     }
 
@@ -1076,11 +1340,12 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 35000);
+      const timeoutId = setTimeout(() => controller.abort(), 32000);
 
       try {
         const contents = chat.messages
           .filter(m => m.role === 'user' || m.role === 'assistant')
+          .slice(-10)
           .map(m => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.text }]
@@ -1094,7 +1359,7 @@
             'X-Telegram-Init-Data': initData
           },
           body: JSON.stringify({
-            model: modelSelect.value,
+            model: selectedModel,
             contents
           })
         });
@@ -1118,11 +1383,18 @@
       } catch (err) {
         clearTimeout(timeoutId);
         loadingDiv.remove();
+
+        // Убираем неотвеченное сообщение из истории, чтобы оно не мешало следующей попытке
+        chat.messages.pop();
+        saveChats();
+
         const errDiv = document.createElement('div');
         errDiv.className = 'msg error';
         errDiv.textContent = err.name === 'AbortError'
           ? 'Превышено время ожидания ответа от сервера. Попробуйте ещё раз.'
-          : (err.message || 'Ошибка соединения с сервером');
+          : (err.message === 'Failed to fetch'
+              ? 'Не удалось соединиться с сервером Cloudflare (проверьте VPN или деплой воркера).'
+              : (err.message || 'Ошибка соединения с сервером'));
 
         if (err.status === 402 || err.status === 403) {
           const btn = document.createElement('button');
@@ -1165,6 +1437,7 @@
     }
 
     // Init
+    applyInitialTelegramUser();
     if (chats.length === 0) {
       createNewChat();
     } else {
