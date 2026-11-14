@@ -7,15 +7,17 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg-primary: #0b0d12;
-      --bg-secondary: #131722;
-      --bg-tertiary: #1c2232;
-      --bg-code: #080a0f;
+      --bg-primary: #090b10;
+      --bg-secondary: #121621;
+      --bg-tertiary: #1a2030;
+      --bg-code: #07090e;
       --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.32);
       --accent-hover: #4f46e5;
+      --pro-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
       --text-primary: #f3f4f6;
       --text-secondary: #9ca3af;
-      --border: #262d3f;
+      --border: #252c3d;
       --danger: #ef4444;
       --success: #10b981;
     }
@@ -25,6 +27,7 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -38,9 +41,10 @@
 
     /* Header */
     .header {
-      height: 56px;
+      height: 58px;
       padding: 0 14px;
-      background: var(--bg-secondary);
+      background: rgba(18, 22, 33, 0.92);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -56,7 +60,7 @@
     }
 
     .icon-btn {
-      background: transparent;
+      background: var(--bg-tertiary);
       border: 1px solid var(--border);
       color: var(--text-primary);
       width: 36px;
@@ -66,11 +70,13 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 17px;
+      transition: transform 0.1s ease, background 0.15s ease;
     }
 
     .icon-btn:active {
-      background: var(--bg-tertiary);
+      transform: scale(0.95);
+      background: #232b40;
     }
 
     .brand {
@@ -82,6 +88,17 @@
       font-size: 15px;
       font-weight: 700;
       letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .brand-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
     }
 
     .brand-sub {
@@ -92,26 +109,30 @@
     .quota-badge {
       font-size: 12px;
       font-weight: 600;
-      padding: 5px 10px;
+      padding: 6px 11px;
       border-radius: 999px;
       background: var(--bg-tertiary);
       border: 1px solid var(--border);
       color: var(--text-primary);
+      cursor: pointer;
+      transition: border-color 0.2s;
     }
 
     .quota-badge.unlimited {
-      border-color: rgba(99, 102, 241, 0.5);
-      color: #a5b4fc;
+      background: rgba(99, 102, 241, 0.14);
+      border-color: rgba(129, 140, 248, 0.5);
+      color: #c7d2fe;
     }
 
     /* Sidebar Drawer */
     .drawer-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.65);
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(2px);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s ease;
+      transition: opacity 0.22s ease;
       z-index: 40;
     }
 
@@ -125,12 +146,12 @@
       top: 0;
       left: 0;
       bottom: 0;
-      width: 280px;
+      width: 285px;
       max-width: 82vw;
       background: var(--bg-secondary);
       border-right: 1px solid var(--border);
       transform: translateX(-100%);
-      transition: transform 0.25s ease;
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
       z-index: 50;
       display: flex;
       flex-direction: column;
@@ -145,13 +166,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .new-chat-btn {
       width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
+      padding: 11px 12px;
+      border-radius: 11px;
       border: none;
       background: var(--accent);
       color: #fff;
@@ -162,7 +183,8 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 14px var(--accent-glow);
     }
 
     .new-chat-btn:active {
@@ -173,8 +195,9 @@
       font-size: 11px;
       text-transform: uppercase;
       color: var(--text-secondary);
-      letter-spacing: 0.6px;
+      letter-spacing: 0.7px;
       margin-bottom: 8px;
+      padding-left: 2px;
     }
 
     .chat-list {
@@ -182,12 +205,12 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .chat-item {
-      padding: 9px 10px;
-      border-radius: 9px;
+      padding: 10px 10px;
+      border-radius: 10px;
       background: transparent;
       border: 1px solid transparent;
       color: var(--text-primary);
@@ -216,8 +239,9 @@
       background: none;
       border: none;
       font-size: 14px;
-      padding: 2px 4px;
+      padding: 2px 5px;
       cursor: pointer;
+      opacity: 0.75;
     }
 
     .drawer-footer {
@@ -229,10 +253,23 @@
       gap: 8px;
     }
 
+    .pro-promo-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: var(--pro-grad);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+
     .admin-open-btn {
       width: 100%;
       padding: 9px;
-      border-radius: 9px;
+      border-radius: 10px;
       border: 1px solid rgba(99, 102, 241, 0.5);
       background: rgba(99, 102, 241, 0.12);
       color: #c7d2fe;
@@ -250,32 +287,34 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      scroll-behavior: smooth;
     }
 
     /* Welcome & Quick Prompts */
     .welcome {
       margin: auto;
       text-align: center;
-      max-width: 380px;
+      max-width: 390px;
       width: 100%;
-      padding: 12px 6px;
+      padding: 12px 4px;
     }
 
     .welcome-logo {
-      width: 54px;
-      height: 54px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: var(--pro-grad);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 26px;
       margin: 0 auto 14px;
-      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
+      box-shadow: 0 10px 28px var(--accent-glow);
     }
 
     .welcome h2 {
-      font-size: 20px;
+      font-size: 21px;
+      font-weight: 700;
       margin-bottom: 6px;
     }
 
@@ -289,29 +328,30 @@
     .suggestions-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 9px;
       text-align: left;
     }
 
     .suggestion-card {
       background: var(--bg-secondary);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
+      border-radius: 13px;
+      padding: 11px 12px;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
 
     .suggestion-card:active {
+      transform: scale(0.98);
       background: var(--bg-tertiary);
       border-color: var(--accent);
     }
 
     .suggestion-title {
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 600;
       color: var(--text-primary);
     }
@@ -319,17 +359,23 @@
     .suggestion-desc {
       font-size: 11px;
       color: var(--text-secondary);
-      line-height: 1.3;
+      line-height: 1.35;
     }
 
     /* Messages & Markdown */
     .msg {
       max-width: 88%;
       padding: 11px 14px;
-      border-radius: 14px;
+      border-radius: 16px;
       font-size: 14px;
       line-height: 1.55;
       word-wrap: break-word;
+      animation: msgAppear 0.18s ease-out;
+    }
+
+    @keyframes msgAppear {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .msg.user {
@@ -338,6 +384,7 @@
       color: #fff;
       border-bottom-right-radius: 4px;
       white-space: pre-wrap;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
     }
 
     .msg.assistant {
@@ -372,8 +419,8 @@
 
     .msg.assistant code.inline-code {
       background: var(--bg-tertiary);
-      padding: 2px 5px;
-      border-radius: 5px;
+      padding: 2px 6px;
+      border-radius: 6px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 12.5px;
       color: #c7d2fe;
@@ -391,8 +438,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 5px 10px;
-      background: #111520;
+      padding: 6px 10px;
+      background: #10141f;
       border-bottom: 1px solid var(--border);
       font-size: 11px;
       color: var(--text-secondary);
@@ -424,10 +471,49 @@
     .msg.error {
       align-self: center;
       background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.4);
+      border: 1px solid rgba(239, 68, 68, 0.35);
       color: #fca5a5;
       font-size: 13px;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .upgrade-inline-btn {
+      background: var(--pro-grad);
+      border: none;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Typing Dots Animation */
+    .typing-dots {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px 2px;
+      align-items: center;
+    }
+
+    .typing-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: bounceDot 1.2s infinite ease-in-out;
+    }
+
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounceDot {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
     }
 
     /* Input Bar */
@@ -441,11 +527,16 @@
     .input-box {
       background: var(--bg-tertiary);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 8px 10px;
+      border-radius: 15px;
+      padding: 9px 11px;
       display: flex;
       flex-direction: column;
       gap: 8px;
+      transition: border-color 0.2s;
+    }
+
+    .input-box:focus-within {
+      border-color: var(--accent);
     }
 
     textarea {
@@ -470,8 +561,8 @@
       background: var(--bg-secondary);
       color: var(--text-primary);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 5px 8px;
+      border-radius: 9px;
+      padding: 6px 9px;
       font-size: 12px;
       font-weight: 500;
       outline: none;
@@ -482,10 +573,15 @@
       color: #fff;
       border: none;
       border-radius: 9px;
-      padding: 6px 14px;
+      padding: 7px 15px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .send-btn:active {
+      background: var(--accent-hover);
     }
 
     .send-btn:disabled {
@@ -493,11 +589,12 @@
       cursor: not-allowed;
     }
 
-    /* Modal (Admin Panel) */
+    /* Modals */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.72);
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(3px);
       display: none;
       align-items: center;
       justify-content: center;
@@ -514,8 +611,9 @@
       max-width: 360px;
       background: var(--bg-secondary);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 18px;
+      animation: msgAppear 0.18s ease-out;
     }
 
     .modal-header {
@@ -526,7 +624,7 @@
     }
 
     .modal h3 {
-      font-size: 16px;
+      font-size: 17px;
     }
 
     .modal input {
@@ -539,6 +637,22 @@
       font-size: 14px;
       margin-bottom: 12px;
       outline: none;
+    }
+
+    .pro-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .pro-features li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .admin-actions {
@@ -577,11 +691,11 @@
     <div class="header-left">
       <button class="icon-btn" id="menuBtn" aria-label="Меню">☰</button>
       <div class="brand">
-        <span class="brand-title">Nova AI</span>
+        <span class="brand-title">Nova AI <span class="brand-dot"></span></span>
         <span class="brand-sub">Nova Labs</span>
       </div>
     </div>
-    <div class="quota-badge" id="quotaBadge">Загрузка...</div>
+    <div class="quota-badge" id="quotaBadge" onclick="openProModal()">Загрузка...</div>
   </header>
 
   <!-- Drawer -->
@@ -595,6 +709,7 @@
     <div class="chat-list-label">Ваши диалоги</div>
     <div class="chat-list" id="chatList"></div>
     <div class="drawer-footer">
+      <button class="pro-promo-btn" id="drawerProBtn" onclick="openProModal()">✦ Подписка Nova Pro</button>
       <button class="admin-open-btn" id="openAdminBtn">⚙ Админ-панель Nova Labs</button>
       <div style="font-size: 11px; color: var(--text-secondary); text-align: center;" id="userInfoLabel">
         Гостевой режим
@@ -613,10 +728,30 @@
         <select class="model-select" id="modelSelect">
           <option value="flash">⚡ Nova Flash</option>
           <option value="lite">🪶 Nova Lite</option>
-          <option value="pro">🧠 Nova Pro</option>
+          <option value="pro" id="proModelOption">🧠 Nova Pro 🔒</option>
         </select>
         <button class="send-btn" id="sendBtn">Отправить</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Pro Info Modal -->
+  <div class="modal-overlay" id="proModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>✦ Подписка Nova Pro</h3>
+        <button class="icon-btn" onclick="closeProModal()">✕</button>
+      </div>
+      <ul class="pro-features">
+        <li>♾ <strong>Безлимитные запросы</strong> без ограничения в 20 сообщений</li>
+        <li>🧠 <strong>Флагманская модель Nova Pro</strong> для сложных задач</li>
+        <li>💻 <strong>Написание и разбор кода</strong> на любых языках</li>
+        <li>🖼 <strong>Распознавание изображений</strong> и документов</li>
+      </ul>
+      <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+        Ваш ID для активации подписки: <strong id="modalUserId" style="color: #fff;">—</strong>
+      </div>
+      <button class="pro-promo-btn" onclick="closeProModal()">Понятно</button>
     </div>
   </div>
 
@@ -629,9 +764,9 @@
       </div>
       <input type="text" id="adminTargetInput" placeholder="Telegram ID или @username" />
       <div class="admin-actions">
-        <button class="admin-btn btn-grant" onclick="runAdminAction('grant_unlimited')">Выдать безлимит ∞</button>
+        <button class="admin-btn btn-grant" onclick="runAdminAction('grant_unlimited')">Выдать Nova Pro ∞</button>
         <button class="admin-btn btn-reset" onclick="runAdminAction('reset_limit')">Сбросить лимит на 20</button>
-        <button class="admin-btn btn-revoke" onclick="runAdminAction('revoke_unlimited')">Отключить безлимит</button>
+        <button class="admin-btn btn-revoke" onclick="runAdminAction('revoke_unlimited')">Отключить Nova Pro</button>
       </div>
       <div class="admin-status" id="adminStatusText"></div>
     </div>
@@ -650,15 +785,18 @@
     let chats = JSON.parse(localStorage.getItem('nova_chats_v2') || '[]');
     let currentChatId = null;
     let isSending = false;
+    let userIsPro = false;
 
     const chatContainer = document.getElementById('chatContainer');
     const chatList = document.getElementById('chatList');
     const promptInput = document.getElementById('promptInput');
     const sendBtn = document.getElementById('sendBtn');
     const modelSelect = document.getElementById('modelSelect');
+    const proModelOption = document.getElementById('proModelOption');
     const quotaBadge = document.getElementById('quotaBadge');
     const openAdminBtn = document.getElementById('openAdminBtn');
     const userInfoLabel = document.getElementById('userInfoLabel');
+    const modalUserId = document.getElementById('modalUserId');
 
     // Drawer controls
     const drawer = document.getElementById('drawer');
@@ -670,6 +808,14 @@
     document.getElementById('menuBtn').onclick = () => toggleDrawer(true);
     document.getElementById('closeDrawerBtn').onclick = () => toggleDrawer(false);
     drawerOverlay.onclick = () => toggleDrawer(false);
+
+    // Pro Modal
+    const proModal = document.getElementById('proModal');
+    window.openProModal = () => {
+      toggleDrawer(false);
+      proModal.classList.add('open');
+    };
+    window.closeProModal = () => proModal.classList.remove('open');
 
     // Admin Modal controls
     const adminModal = document.getElementById('adminModal');
@@ -843,23 +989,23 @@
           <div class="welcome">
             <div class="welcome-logo">✦</div>
             <h2>Nova AI</h2>
-            <p>Интеллектуальный помощник от студии Nova Labs. Выберите подсказку или задайте свой вопрос.</p>
+            <p>Интеллектуальный помощник от студии Nova Labs. Выберите готовую идею или задайте свой вопрос.</p>
             <div class="suggestions-grid">
-              <div class="suggestion-card" onclick="useSuggestion('Придумай 5 креативных идей для нового проекта в Telegram')">
+              <div class="suggestion-card" onclick="useSuggestion('Придумай 5 креативных идей для нового канала в Telegram')">
                 <span class="suggestion-title">💡 Идеи для проекта</span>
                 <span class="suggestion-desc">Свежие концепции для запуска в Telegram</span>
               </div>
-              <div class="suggestion-card" onclick="useSuggestion('Напиши простой и чистый скрипт на Python для парсинга данных')">
-                <span class="suggestion-title">💻 Написать код</span>
-                <span class="suggestion-desc">Рабочий пример с пояснениями</span>
+              <div class="suggestion-card" onclick="useSuggestion('Составь пошаговый план развития личного бренда с нуля')">
+                <span class="suggestion-title">🚀 План и стратегия</span>
+                <span class="suggestion-desc">Пошаговый разбор любой задачи</span>
               </div>
               <div class="suggestion-card" onclick="useSuggestion('Объясни простыми словами, как работают нейросети и токены')">
                 <span class="suggestion-title">🧠 Простыми словами</span>
                 <span class="suggestion-desc">Разбор сложной темы за 1 минуту</span>
               </div>
-              <div class="suggestion-card" onclick="useSuggestion('Составь продающий пост-анонс для запуска AI-сервиса')">
+              <div class="suggestion-card" onclick="useSuggestion('Составь цепляющий пост-анонс для запуска AI-сервиса')">
                 <span class="suggestion-title">✍️ Текст и посты</span>
-                <span class="suggestion-desc">Цепляющий анонс для канала</span>
+                <span class="suggestion-desc">Сильный текст для соцсетей</span>
               </div>
             </div>
           </div>
@@ -883,12 +1029,16 @@
 
     function updateStatusUI(status) {
       if (!status) return;
-      if (status.isUnlimited) {
-        quotaBadge.textContent = status.isAdmin ? 'Admin ∞' : 'Безлимит ∞';
+      userIsPro = Boolean(status.isUnlimited || status.isAdmin);
+
+      if (userIsPro) {
+        quotaBadge.textContent = status.isAdmin ? 'Admin ∞' : 'Nova Pro ∞';
         quotaBadge.classList.add('unlimited');
+        proModelOption.textContent = '🧠 Nova Pro';
       } else {
         quotaBadge.textContent = `${status.remaining} / ${status.limit}`;
         quotaBadge.classList.remove('unlimited');
+        proModelOption.textContent = '🧠 Nova Pro 🔒';
       }
 
       if (status.isAdmin) {
@@ -897,6 +1047,7 @@
 
       if (status.userId) {
         userInfoLabel.textContent = `ID: ${status.userId}` + (status.username ? ` (@${status.username})` : '');
+        modalUserId.textContent = status.userId;
       }
     }
 
@@ -942,7 +1093,7 @@
 
       const loadingDiv = document.createElement('div');
       loadingDiv.className = 'msg assistant';
-      loadingDiv.textContent = 'Думаю...';
+      loadingDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
       chatContainer.appendChild(loadingDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
@@ -970,7 +1121,7 @@
         loadingDiv.remove();
 
         if (!res.ok) {
-          throw new Error(payload.error || 'Ошибка сервера');
+          throw { message: payload.error || 'Ошибка сервера', status: res.status };
         }
 
         const replyText = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Пустой ответ от модели.';
@@ -985,7 +1136,14 @@
         loadingDiv.remove();
         const errDiv = document.createElement('div');
         errDiv.className = 'msg error';
-        errDiv.textContent = err.message;
+        errDiv.textContent = err.message || 'Ошибка соединения';
+        if (err.status === 402 || err.status === 403) {
+          const btn = document.createElement('button');
+          btn.className = 'upgrade-inline-btn';
+          btn.textContent = 'Подробнее о Nova Pro';
+          btn.onclick = openProModal;
+          errDiv.appendChild(btn);
+        }
         chatContainer.appendChild(errDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
       } finally {
