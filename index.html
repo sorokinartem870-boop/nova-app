@@ -7,93 +7,624 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg-primary: #121212; --bg-secondary: #1a1a1a; --bg-tertiary: #242424;
-      --bg-code: #0d0d0d; --accent: #e5e5e5; --accent-text: #121212;
-      --text-primary: #f4f4f5; --text-secondary: #a1a1aa; --border: #2e2e32;
-      --danger: #dc2626; --success: #16a34a;
+      --bg-primary: #121212;
+      --bg-secondary: #1a1a1a;
+      --bg-tertiary: #242424;
+      --bg-code: #0d0d0d;
+      --accent: #e5e5e5;
+      --accent-text: #121212;
+      --accent-hover: #ffffff;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --border: #2e2e32;
+      --danger: #dc2626;
+      --success: #16a34a;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: var(--bg-primary); color: var(--text-primary); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-    
-    /* Header */
-    .header { height: 56px; padding: 0 14px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 10; }
-    .header-left { display: flex; align-items: center; gap: 10px; }
-    .icon-btn { background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-primary); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 17px; }
-    .brand-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-    .brand-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-secondary); }
-    .brand-sub { font-size: 11px; color: var(--text-secondary); }
-    .quota-badge { font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px; background: var(--bg-tertiary); border: 1px solid var(--border); cursor: pointer; }
-    .quota-badge.unlimited { background: #262626; border-color: #404040; color: #f4f4f5; }
 
-    /* Drawer & Overlays */
-    .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 40; }
-    .overlay.open { opacity: 1; pointer-events: auto; }
-    .drawer { position: fixed; top: 0; left: 0; bottom: 0; width: 280px; max-width: 82vw; background: var(--bg-secondary); border-right: 1px solid var(--border); transform: translateX(-100%); transition: transform 0.22s; z-index: 50; display: flex; flex-direction: column; padding: 14px; }
-    .drawer.open { transform: translateX(0); }
-    .drawer-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    .chat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
-    .chat-item { padding: 10px; border-radius: 10px; font-size: 13px; display: flex; justify-content: space-between; gap: 8px; cursor: pointer; border: 1px solid transparent; }
-    .chat-item.active { background: var(--bg-tertiary); border-color: var(--border); }
-    .chat-item-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-    .chat-delete { color: var(--text-secondary); background: none; border: none; font-size: 14px; cursor: pointer; padding: 0 5px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-    /* Buttons */
-    .primary-btn { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid var(--border); background: var(--accent); color: var(--accent-text); font-weight: 700; font-size: 13px; cursor: pointer; text-align: center; }
-    .secondary-btn { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
-    .drawer-footer { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-    /* Chat Area */
-    .chat-container { flex: 1; overflow-y: auto; padding: 16px 14px; display: flex; flex-direction: column; gap: 12px; }
-    .welcome { margin: auto; text-align: center; max-width: 390px; width: 100%; }
-    .welcome-logo { width: 50px; height: 50px; border-radius: 14px; background: var(--bg-tertiary); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 12px; }
-    .welcome p { font-size: 13px; color: var(--text-secondary); margin: 6px 0 18px; line-height: 1.4; }
-    
-    .msg { max-width: 88%; padding: 11px 14px; border-radius: 14px; font-size: 14px; line-height: 1.55; word-wrap: break-word; }
-    .msg.user { align-self: flex-end; background: #2b2b2f; border: 1px solid #3f3f46; color: #fff; border-bottom-right-radius: 4px; white-space: pre-wrap; }
-    .msg.assistant { align-self: flex-start; background: var(--bg-secondary); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-    .msg.error { align-self: center; background: #221515; border: 1px solid #452222; color: #fca5a5; font-size: 13px; text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center; }
-    .msg-image { max-width: 200px; border-radius: 8px; display: block; margin-bottom: 6px; }
-    
-    .code-block-wrap { margin: 8px 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--bg-code); }
-    .code-block-header { display: flex; justify-content: space-between; padding: 6px 10px; background: #161616; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); }
-    .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; padding: 2px 8px; font-size: 11px; cursor: pointer; }
-    .code-block-wrap pre { padding: 10px; overflow-x: auto; font-family: monospace; font-size: 12.5px; color: #e5e7eb; }
+    /* --- Header --- */
+    .header {
+      height: 56px;
+      padding: 0 14px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 10;
+    }
 
-    /* Input Area */
-    .input-wrapper { padding: 10px 12px 14px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
-    .input-box { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 14px; padding: 9px 11px; display: flex; flex-direction: column; gap: 8px; }
-    
-    .attach-preview { display: none; align-items: center; justify-content: space-between; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font-size: 12px; }
-    .attach-preview.active { display: flex; }
-    .attach-thumb { width: 28px; height: 28px; border-radius: 5px; object-fit: cover; }
-    
-    textarea { width: 100%; background: transparent; border: none; color: var(--text-primary); font-size: 14px; resize: none; max-height: 100px; outline: none; }
-    .input-controls { display: flex; align-items: center; justify-content: space-between; }
-    .controls-left { display: flex; align-items: center; gap: 6px; }
-    
-    /* Native Label for Attachment */
-    .attach-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
-    .model-trigger-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; padding: 6px 11px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; height: 34px; }
-    .send-btn { background: var(--accent); color: var(--accent-text); border: none; border-radius: 9px; padding: 0 16px; font-size: 13px; font-weight: 600; cursor: pointer; height: 34px; }
-    .send-btn:disabled { opacity: 0.5; }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-    /* Model Sheet */
-    .model-sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg-secondary); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 12px 16px 24px; transform: translateY(100%); transition: transform 0.24s; z-index: 60; max-width: 520px; margin: 0 auto; }
-    .model-sheet.open { transform: translateY(0); }
-    .sheet-handle { width: 36px; height: 4px; border-radius: 99px; background: #3f3f46; margin: 0 auto 12px; }
-    .model-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-    .model-card { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 13px; padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: var(--text-primary); text-align: left; }
-    .model-card.selected { border-color: var(--accent); background: #27272a; }
-    .model-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; }
-    .model-tag { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 5px; background: #3f3f46; margin-left: 6px; }
+    .icon-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 17px;
+    }
 
-    /* Modals */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 70; }
-    .modal-overlay.open { display: flex; }
-    .modal { width: 100%; max-width: 360px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
-    .modal input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); margin-bottom: 12px; outline: none; }
-    .id-copy-box { display: flex; align-items: center; justify-content: space-between; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; margin: 14px 0; font-size: 12px; }
-    
+    .icon-btn:active {
+      background: #2f2f2f;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .quota-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .quota-badge.unlimited {
+      background: #262626;
+      border-color: #404040;
+      color: #f4f4f5;
+    }
+
+    /* --- Overlays & Drawers --- */
+    .drawer-overlay, .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 40;
+    }
+
+    .drawer-overlay.open, .sheet-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      max-width: 82vw;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      transform: translateX(-100%);
+      transition: transform 0.22s ease;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .new-chat-btn, .pro-promo-btn {
+      width: 100%;
+      padding: 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .secondary-btn, .admin-open-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .admin-open-btn {
+      display: none;
+    }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .chat-item {
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .chat-item.active {
+      background: var(--bg-tertiary);
+      border-color: var(--border);
+    }
+
+    .chat-item-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .chat-delete {
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0 5px;
+    }
+
+    .drawer-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* --- Chat Area --- */
+    .chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .welcome {
+      margin: auto;
+      text-align: center;
+      max-width: 390px;
+      width: 100%;
+    }
+
+    .welcome-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin: 0 auto 12px;
+    }
+
+    .welcome p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 6px 0 18px;
+      line-height: 1.45;
+    }
+
+    .suggestions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .suggestion-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .suggestion-card:active {
+      background: var(--bg-tertiary);
+    }
+
+    .suggestion-title {
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .suggestion-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.35;
+    }
+
+    .msg {
+      max-width: 88%;
+      padding: 11px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.55;
+      word-wrap: break-word;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: #2b2b2f;
+      border: 1px solid #3f3f46;
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+      white-space: pre-wrap;
+    }
+
+    .msg.assistant {
+      align-self: flex-start;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg.error {
+      align-self: center;
+      background: #221515;
+      border: 1px solid #452222;
+      color: #fca5a5;
+      font-size: 13px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .msg-image {
+      max-width: 200px;
+      border-radius: 8px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .code-block-wrap {
+      margin: 8px 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-code);
+    }
+
+    .code-block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      background: #161616;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .copy-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .code-block-wrap pre {
+      padding: 10px;
+      overflow-x: auto;
+      font-family: monospace;
+      font-size: 12.5px;
+      color: #e5e7eb;
+    }
+
+    /* --- Input Area --- */
+    .input-wrapper {
+      padding: 10px 12px 14px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+    }
+
+    .input-box {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .attach-preview {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+
+    .attach-preview.active {
+      display: flex;
+    }
+
+    .attach-thumb {
+      width: 28px;
+      height: 28px;
+      border-radius: 5px;
+      object-fit: cover;
+    }
+
+    textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      resize: none;
+      max-height: 100px;
+      outline: none;
+    }
+
+    .input-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .attach-btn {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .model-trigger-btn {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 11px;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .send-btn {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      border-radius: 9px;
+      padding: 7px 15px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+    }
+
+    /* --- Model Sheet --- */
+    .model-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      padding: 12px 16px 24px;
+      transform: translateY(100%);
+      transition: transform 0.24s ease;
+      z-index: 60;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .model-sheet.open {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 99px;
+      background: #3f3f46;
+      margin: 0 auto 12px;
+    }
+
+    .model-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .model-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+
+    .model-card.selected {
+      border-color: var(--accent);
+      background: #27272a;
+    }
+
+    .model-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+
+    .model-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #3f3f46;
+      margin-left: 6px;
+    }
+
+    /* --- Modals --- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 70;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 360px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    .pro-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+
+    .id-copy-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      font-size: 12px;
+    }
+
     .typing-dots { display: inline-flex; gap: 4px; padding: 4px 2px; }
     .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-secondary); animation: bounce 1.2s infinite ease-in-out; }
     .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
@@ -103,6 +634,7 @@
 </head>
 <body>
 
+<!-- Шапка приложения -->
 <header class="header">
   <div class="header-left">
     <button class="icon-btn" id="menuBtn">☰</button>
@@ -114,45 +646,51 @@
   <div class="quota-badge" id="quotaBadge" onclick="openProModal()">Загрузка...</div>
 </header>
 
-<!-- Drawer -->
-<div class="overlay" id="drawerOverlay"></div>
+<!-- Боковое меню (История чатов) -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
 <aside class="drawer" id="drawer">
   <div class="drawer-header">
     <strong>История чатов</strong>
     <button class="icon-btn" id="closeDrawerBtn">✕</button>
   </div>
-  <button class="primary-btn" id="newChatBtn" style="margin-bottom:10px;">+ Новый чат</button>
+  <button class="primary-btn" id="newChatBtn" style="margin-bottom: 10px;">+ Новый чат</button>
   <div class="chat-list" id="chatList"></div>
   <div class="drawer-footer">
     <button class="primary-btn" onclick="openProModal()">✦ Подписка Nova Pro</button>
-    <button class="secondary-btn" id="openAdminBtn" style="display:none;">Админ-панель</button>
-    <div style="font-size:11px; text-align:center; color:var(--text-secondary);" id="userInfoLabel">Гостевой режим</div>
+    <button class="secondary-btn" id="openAdminBtn" style="display: none;">Админ-панель</button>
+    <div style="font-size: 11px; text-align: center; color: var(--text-secondary);" id="userInfoLabel">Гостевой режим</div>
   </div>
 </aside>
 
+<!-- Контейнер для сообщений -->
 <main class="chat-container" id="chatContainer"></main>
 
+<!-- Поле ввода -->
 <div class="input-wrapper">
   <div class="input-box">
+    
+    <!-- Превью картинки -->
     <div class="attach-preview" id="attachPreview">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <img id="attachThumb" class="attach-thumb" src="" alt=""/>
-        <span id="attachName" style="color:var(--text-secondary);">Фото прикреплено</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <img id="attachThumb" class="attach-thumb" src="" alt="preview" />
+        <span id="attachName" style="color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Фото прикреплено</span>
       </div>
       <button type="button" class="chat-delete" onclick="clearAttachment()">✕</button>
     </div>
-    <textarea id="promptInput" rows="1" placeholder="Напишите запрос..."></textarea>
+    
+    <textarea id="promptInput" rows="1" placeholder="Напишите запрос для Nova AI..."></textarea>
     
     <div class="input-controls">
       <div class="controls-left">
-        <!-- Правильный нативный тег label для безотказного открытия файлов -->
+        
+        <!-- Надежная кнопка прикрепления файла через тег Label -->
         <label for="imageInput" class="attach-btn" id="attachLabel">📎</label>
-        <input type="file" id="imageInput" accept="image/*" style="display:none;"/>
+        <input type="file" id="imageInput" accept="image/*" style="display: none;" />
         
         <button type="button" class="model-trigger-btn" id="modelTriggerBtn">
           <span id="currentModelIcon">⚡</span>
           <span id="currentModelLabel">Nova Flash</span>
-          <span style="font-size:10px; color:var(--text-secondary);">▾</span>
+          <span style="font-size: 10px; color: var(--text-secondary);">▾</span>
         </button>
       </div>
       <button class="send-btn" id="sendBtn" type="button">Отправить</button>
@@ -160,40 +698,41 @@
   </div>
 </div>
 
-<!-- Model Sheet -->
-<div class="overlay" id="sheetOverlay"></div>
+<!-- Шторка выбора моделей -->
+<div class="sheet-overlay" id="sheetOverlay"></div>
 <div class="model-sheet" id="modelSheet">
   <div class="sheet-handle"></div>
-  <strong style="font-size: 16px;">Выберите модель Nova</strong>
+  <strong style="font-size: 16px; margin-bottom: 12px; display: block;">Выберите модель Nova</strong>
+  
   <div class="model-cards">
     <div class="model-card selected" data-model="flash" onclick="selectModel('flash')">
-      <div style="display:flex; align-items:flex-start;">
+      <div style="display: flex; align-items: flex-start;">
         <div class="model-icon">⚡</div>
         <div>
-          <div style="font-weight:600; font-size:14px;">Nova Flash <span class="model-tag">БАЗОВАЯ</span></div>
-          <div style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Быстрая модель для повседневных задач</div>
+          <div style="font-weight: 600; font-size: 14px;">Nova Flash <span class="model-tag">БАЗОВАЯ</span></div>
+          <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">Оптимальный баланс скорости и качества</div>
         </div>
       </div>
       <span class="mcheck">✓</span>
     </div>
     
     <div class="model-card" data-model="lite" onclick="selectModel('lite')">
-      <div style="display:flex; align-items:flex-start;">
+      <div style="display: flex; align-items: flex-start;">
         <div class="model-icon">🪶</div>
         <div>
-          <div style="font-weight:600; font-size:14px;">Nova Lite <span class="model-tag">БЫСТРАЯ</span></div>
-          <div style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Мгновенные ответы на простые вопросы</div>
+          <div style="font-weight: 600; font-size: 14px;">Nova Lite <span class="model-tag">БЫСТРАЯ</span></div>
+          <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">Мгновенные ответы на простые вопросы</div>
         </div>
       </div>
       <span class="mcheck"></span>
     </div>
     
     <div class="model-card" data-model="pro" onclick="selectModel('pro')">
-      <div style="display:flex; align-items:flex-start;">
+      <div style="display: flex; align-items: flex-start;">
         <div class="model-icon">🧠</div>
         <div>
-          <div style="font-weight:600; font-size:14px;">Nova Pro <span class="model-tag" id="proTagBadge">PRO 🔒</span></div>
-          <div style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Сложная аналитика, код и фото</div>
+          <div style="font-weight: 600; font-size: 14px;">Nova Pro <span class="model-tag" id="proTagBadge">PRO 🔒</span></div>
+          <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">Сложная аналитика, стратегии и код</div>
         </div>
       </div>
       <span class="mcheck"></span>
@@ -201,305 +740,625 @@
   </div>
 </div>
 
-<!-- Pro Modal -->
+<!-- Модальное окно подписки Nova Pro -->
 <div class="modal-overlay" id="proModal">
   <div class="modal">
     <div class="drawer-header">
-      <h3 style="font-size:17px;">✦ Подписка Nova Pro</h3>
+      <h3 style="font-size: 17px;">✦ Подписка Nova Pro</h3>
       <button class="icon-btn" onclick="closeProModal()">✕</button>
     </div>
-    <ul style="list-style:none; font-size:13px; line-height:1.6; margin-bottom:12px;">
-      <li>• <strong>Безлимитные запросы</strong></li>
+    
+    <ul class="pro-features">
+      <li>• <strong>Безлимитные запросы</strong> (без лимита 20 шт)</li>
       <li>• <strong>Модель Nova Pro</strong> для сложных задач</li>
       <li>• <strong>Написание кода</strong> на любых языках</li>
-      <li>• <strong>Распознавание фотографий</strong> (📎)</li>
+      <li>• <strong>Распознавание изображений</strong> (📎)</li>
     </ul>
+    
     <div class="id-copy-box">
       <span>Ваш ID: <strong id="modalUserId">—</strong></span>
       <button type="button" class="copy-btn" id="copyIdBtn" onclick="copyUserId()">Копировать</button>
     </div>
-    <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="primary-btn" id="buyStarsBtn" onclick="buyWithStars()">⭐ Купить Nova Pro за 100 Stars</button>
-      <button class="secondary-btn" onclick="contactAdminForPro()">💬 Оформить через администратора</button>
+    
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <button type="button" class="primary-btn" id="buyStarsBtn" onclick="buyWithStars()">
+        ⭐ Купить Nova Pro за 100 Stars
+      </button>
+      <button type="button" class="secondary-btn" onclick="contactAdminForPro()">
+        💬 Оформить через администратора
+      </button>
     </div>
-    <div style="margin-top:10px; font-size:12px; color:var(--text-secondary); text-align:center;" id="proStatusText"></div>
+    <div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary); text-align: center;" id="proStatusText"></div>
   </div>
 </div>
 
-<!-- Admin Modal -->
+<!-- Админ-панель -->
 <div class="modal-overlay" id="adminModal">
   <div class="modal">
     <div class="drawer-header">
-      <h3 style="font-size:17px;">Админ-панель</h3>
+      <h3 style="font-size: 17px;">Админ-панель</h3>
       <button class="icon-btn" onclick="document.getElementById('adminModal').classList.remove('open')">✕</button>
     </div>
-    <input type="text" id="adminTargetInput" placeholder="Telegram ID или @username"/>
-    <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="primary-btn" style="background:var(--success);" onclick="runAdminAction('grant_unlimited')">Выдать Nova Pro ∞</button>
+    <input type="text" id="adminTargetInput" placeholder="Telegram ID или @username" />
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <button class="primary-btn" style="background: var(--success);" onclick="runAdminAction('grant_unlimited')">Выдать Nova Pro ∞</button>
       <button class="secondary-btn" onclick="runAdminAction('reset_limit')">Сбросить лимит на 20</button>
-      <button class="primary-btn" style="background:var(--danger);" onclick="runAdminAction('revoke_unlimited')">Отключить Nova Pro</button>
+      <button class="primary-btn" style="background: var(--danger);" onclick="runAdminAction('revoke_unlimited')">Отключить Nova Pro</button>
     </div>
-    <div style="margin-top:10px; font-size:12px; color:var(--text-secondary); text-align:center;" id="adminStatusText"></div>
+    <div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary); text-align: center;" id="adminStatusText"></div>
   </div>
 </div>
 
 <script>
+  // Основные настройки
   const WORKER_URL = 'https://nova-proxy.sorokinartem870.workers.dev';
   const ADMIN_ID = '5546523537';
   const tg = window.Telegram?.WebApp;
   
-  if(tg) { tg.ready(); tg.expand(); }
-  const haptic = () => { if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); };
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
+  
+  // Вибрация (Haptic Feedback)
+  const triggerHaptic = () => {
+    if (tg && tg.HapticFeedback) {
+      tg.HapticFeedback.impactOccurred('light');
+    }
+  };
 
   const initData = tg?.initData || '';
   const unsafeUser = tg?.initDataUnsafe?.user || null;
   
   let chats = JSON.parse(localStorage.getItem('nova_chats_v2') || '[]');
-  let currentChatId = null, selectedModel = 'flash', isSending = false, userIsPro = false;
+  let currentChatId = null;
+  let selectedModel = 'flash';
+  let isSending = false;
+  let userIsPro = false;
   let currentUserId = unsafeUser?.id ? String(unsafeUser.id) : '';
   let attachedImage = null;
 
-  const META = {
+  const MODEL_META = {
     flash: { icon: '⚡', label: 'Nova Flash' },
     lite: { icon: '🪶', label: 'Nova Lite' },
     pro: { icon: '🧠', label: 'Nova Pro' }
   };
 
-  const $ = id => document.getElementById(id);
+  const toggleDrawer = (open) => {
+    triggerHaptic();
+    document.getElementById('drawer').classList.toggle('open', open);
+    document.getElementById('drawerOverlay').classList.toggle('open', open);
+  };
   
-  // Modals & Drawers
-  const toggleDrawer = (o) => { haptic(); $('drawer').classList.toggle('open', o); $('drawerOverlay').classList.toggle('open', o); };
-  const toggleSheet = (o) => { haptic(); $('modelSheet').classList.toggle('open', o); $('sheetOverlay').classList.toggle('open', o); };
+  const toggleSheet = (open) => {
+    triggerHaptic();
+    document.getElementById('modelSheet').classList.toggle('open', open);
+    document.getElementById('sheetOverlay').classList.toggle('open', open);
+  };
+
+  document.getElementById('menuBtn').addEventListener('click', () => toggleDrawer(true));
+  document.getElementById('closeDrawerBtn').addEventListener('click', () => toggleDrawer(false));
+  document.getElementById('drawerOverlay').addEventListener('click', () => toggleDrawer(false));
   
-  $('menuBtn').onclick = () => toggleDrawer(true);
-  $('closeDrawerBtn').onclick = () => toggleDrawer(false);
-  $('drawerOverlay').onclick = () => toggleDrawer(false);
-  $('modelTriggerBtn').onclick = () => toggleSheet(true);
-  $('sheetOverlay').onclick = () => toggleSheet(false);
+  document.getElementById('modelTriggerBtn').addEventListener('click', () => toggleSheet(true));
+  document.getElementById('sheetOverlay').addEventListener('click', () => toggleSheet(false));
 
-  window.openProModal = () => { toggleDrawer(false); $('proStatusText').textContent = userIsPro ? 'У вас уже активна подписка Nova Pro ∞' : ''; $('proModal').classList.add('open'); haptic(); };
-  window.closeProModal = () => { $('proModal').classList.remove('open'); haptic(); };
-  $('openAdminBtn').onclick = () => { toggleDrawer(false); $('adminModal').classList.add('open'); };
+  window.openProModal = () => {
+    toggleDrawer(false);
+    triggerHaptic();
+    document.getElementById('proStatusText').textContent = userIsPro ? 'У вас уже активна подписка Nova Pro ∞' : '';
+    document.getElementById('proModal').classList.add('open');
+  };
+  window.closeProModal = () => {
+    triggerHaptic();
+    document.getElementById('proModal').classList.remove('open');
+  };
+  
+  document.getElementById('openAdminBtn').addEventListener('click', () => {
+    toggleDrawer(false);
+    document.getElementById('adminModal').classList.add('open');
+  });
 
-  // Model Selection
-  window.selectModel = (k) => {
-    if(k === 'pro' && !userIsPro) { toggleSheet(false); openProModal(); return; }
-    selectedModel = k;
-    $('currentModelIcon').textContent = META[k].icon;
-    $('currentModelLabel').textContent = META[k].label;
-    document.querySelectorAll('.model-card').forEach(c => {
-      const isSel = c.dataset.model === k;
-      c.classList.toggle('selected', isSel);
-      c.querySelector('.mcheck').textContent = isSel ? '✓' : '';
+  // Выбор модели
+  window.selectModel = (key) => {
+    if (key === 'pro' && !userIsPro) {
+      toggleSheet(false);
+      openProModal();
+      return;
+    }
+    selectedModel = key;
+    document.getElementById('currentModelIcon').textContent = MODEL_META[key].icon;
+    document.getElementById('currentModelLabel').textContent = MODEL_META[key].label;
+    
+    document.querySelectorAll('.model-card').forEach(card => {
+      const isSelected = card.dataset.model === key;
+      card.classList.toggle('selected', isSelected);
+      card.querySelector('.mcheck').textContent = isSelected ? '✓' : '';
     });
     toggleSheet(false);
   };
 
-  // Image Attachment Fix (Intercept label click if not pro)
-  $('imageInput').addEventListener('click', (e) => {
-    if(!userIsPro) {
-      e.preventDefault(); // Запрещаем открытие галереи
+  // --- Загрузка изображений (Фикс галереи) ---
+  const attachLabel = document.getElementById('attachLabel');
+  const imageInput = document.getElementById('imageInput');
+
+  attachLabel.addEventListener('click', (e) => {
+    if (!userIsPro) {
+      e.preventDefault(); // Запрещаем открытие галереи на бесплатном тарифе
       openProModal();
     } else {
-      haptic();
+      triggerHaptic();
     }
   });
 
-  $('imageInput').addEventListener('change', (e) => {
+  imageInput.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
-    if(!file) return;
+    if (!file) return;
+    
     const reader = new FileReader();
     reader.onload = () => {
-      const base64 = String(reader.result).split(',')[1];
-      if(!base64) return;
-      attachedImage = { mimeType: file.type || 'image/jpeg', data: base64, previewUrl: reader.result, name: file.name || 'Фото' };
-      $('attachThumb').src = reader.result;
-      $('attachPreview').classList.add('active');
+      const resultStr = String(reader.result || '');
+      const base64Data = resultStr.split(',')[1];
+      if (!base64Data) return;
+      
+      attachedImage = {
+        mimeType: file.type || 'image/jpeg',
+        data: base64Data,
+        previewUrl: resultStr,
+        name: file.name || 'Фото'
+      };
+      document.getElementById('attachThumb').src = resultStr;
+      document.getElementById('attachName').textContent = attachedImage.name;
+      document.getElementById('attachPreview').classList.add('active');
     };
     reader.readAsDataURL(file);
   });
   
-  window.clearAttachment = () => { attachedImage = null; $('imageInput').value = ''; $('attachPreview').classList.remove('active'); haptic(); };
+  window.clearAttachment = () => {
+    triggerHaptic();
+    attachedImage = null;
+    imageInput.value = '';
+    document.getElementById('attachPreview').classList.remove('active');
+  };
 
-  // Utility logic
+  // Копирование ID
   window.copyUserId = () => {
-    const id = currentUserId || $('modalUserId').textContent;
-    if(!id || id === '—') return;
-    navigator.clipboard.writeText(id).then(() => {
-      $('copyIdBtn').textContent = 'Успешно!';
-      haptic();
-      setTimeout(() => $('copyIdBtn').textContent = 'Копировать', 1500);
+    const idToCopy = currentUserId || document.getElementById('modalUserId').textContent;
+    if (!idToCopy || idToCopy === '—') return;
+    navigator.clipboard.writeText(idToCopy).then(() => {
+      const btn = document.getElementById('copyIdBtn');
+      btn.textContent = 'Скопировано!';
+      triggerHaptic();
+      setTimeout(() => { btn.textContent = 'Копировать'; }, 1500);
     });
   };
 
-  // Chat UI & API requests
-  $('promptInput').addEventListener('input', () => {
-    $('promptInput').style.height = 'auto';
-    $('promptInput').style.height = Math.min($('promptInput').scrollHeight, 100) + 'px';
+  // Интерфейс чатов
+  const promptInput = document.getElementById('promptInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const chatContainer = document.getElementById('chatContainer');
+  
+  promptInput.addEventListener('input', () => {
+    promptInput.style.height = 'auto';
+    promptInput.style.height = Math.min(promptInput.scrollHeight, 100) + 'px';
   });
-  $('promptInput').addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }});
-  $('sendBtn').onclick = () => sendMessage();
-  $('newChatBtn').onclick = () => { createNewChat(); toggleDrawer(false); };
+  
+  promptInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  
+  sendBtn.addEventListener('click', () => sendMessage());
+  document.getElementById('newChatBtn').addEventListener('click', () => {
+    createNewChat();
+    toggleDrawer(false);
+  });
 
-  function saveChats() { localStorage.setItem('nova_chats_v2', JSON.stringify(chats)); }
-  function createNewChat() { const id = 'chat_' + Date.now(); chats.unshift({id, title: 'Новый диалог', messages: []}); currentChatId = id; saveChats(); renderChatList(); renderMessages(); }
-  function deleteChat(id, e) { e.stopPropagation(); haptic(); chats = chats.filter(c => c.id !== id); if(currentChatId === id) currentChatId = chats[0]?.id || null; if(!currentChatId) createNewChat(); else { saveChats(); renderChatList(); renderMessages(); } }
+  function saveChats() {
+    localStorage.setItem('nova_chats_v2', JSON.stringify(chats));
+  }
+
+  function createNewChat() {
+    const id = 'chat_' + Date.now();
+    chats.unshift({ id, title: 'Новый диалог', messages: [] });
+    currentChatId = id;
+    saveChats();
+    renderChatList();
+    renderMessages();
+  }
+
+  function deleteChat(id, e) {
+    e.stopPropagation();
+    triggerHaptic();
+    chats = chats.filter(c => c.id !== id);
+    if (currentChatId === id) {
+      currentChatId = chats[0]?.id || null;
+    }
+    if (!currentChatId) {
+      createNewChat();
+    } else {
+      saveChats();
+      renderChatList();
+      renderMessages();
+    }
+  }
 
   function renderChatList() {
-    $('chatList').innerHTML = '';
-    chats.forEach(c => {
-      const d = document.createElement('div');
-      d.className = 'chat-item' + (c.id === currentChatId ? ' active' : '');
-      d.onclick = () => { currentChatId = c.id; renderChatList(); renderMessages(); toggleDrawer(false); };
-      d.innerHTML = `<span class="chat-item-title">${c.title}</span><button class="chat-delete">✕</button>`;
-      d.querySelector('.chat-delete').onclick = (e) => deleteChat(c.id, e);
-      $('chatList').appendChild(d);
+    const list = document.getElementById('chatList');
+    list.innerHTML = '';
+    chats.forEach(chat => {
+      const div = document.createElement('div');
+      div.className = 'chat-item' + (chat.id === currentChatId ? ' active' : '');
+      div.onclick = () => {
+        currentChatId = chat.id;
+        renderChatList();
+        renderMessages();
+        toggleDrawer(false);
+      };
+      div.innerHTML = `<span class="chat-item-title">${chat.title}</span><button class="chat-delete">✕</button>`;
+      div.querySelector('.chat-delete').onclick = (e) => deleteChat(chat.id, e);
+      list.appendChild(div);
     });
   }
 
-  function formatMd(text) {
-    const blocks = [];
-    let p = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-      blocks.push(`<div class="code-block-wrap"><div class="code-block-header"><span>${lang || 'code'}</span><button class="copy-btn" onclick="copyCode(this)">Копировать</button></div><pre><code>${code.trim()}</code></pre></div>`);
-      return `@@CB_${blocks.length - 1}@@`;
-    });
-    p = p.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
-    p = p.replace(/`([^`\n]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-    blocks.forEach((b, i) => { p = p.replace(new RegExp(escapeRegExp(`@@CB_${i}@@`), 'g'), b); });
-    return p;
+  // Форматирование Markdown и подсветка кода
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
   }
-  function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-  
-  window.copyCode = (btn) => {
-    const code = btn.closest('.code-block-wrap').querySelector('code');
-    if(code) navigator.clipboard.writeText(code.innerText).then(() => { btn.textContent = 'Успешно'; haptic(); setTimeout(() => btn.textContent = 'Копировать', 1500); });
+
+  function formatMarkdown(text) {
+    const codeBlocks = [];
+    let processed = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+      const idx = codeBlocks.length;
+      const cleanCode = escapeHtml(code.trim());
+      const label = lang ? escapeHtml(lang) : 'code';
+      codeBlocks.push(`
+        <div class="code-block-wrap">
+          <div class="code-block-header">
+            <span>${label}</span>
+            <button class="copy-btn" onclick="copyCodeBlock(this)">Копировать</button>
+          </div>
+          <pre><code>${cleanCode}</code></pre>
+        </div>
+      `);
+      return `@@CODEBLOCK_${idx}@@`;
+    });
+
+    processed = escapeHtml(processed);
+    processed = processed.replace(/`([^`\n]+)`/g, '<code style="background:var(--bg-tertiary); padding:2px 6px; border-radius:5px; font-family:monospace; color:#e4e4e7;">$1</code>');
+    processed = processed.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    processed = processed.replace(/\n/g, '<br>');
+
+    codeBlocks.forEach((block, i) => {
+      processed = processed.replace(`@@CODEBLOCK_${i}@@`, block);
+    });
+
+    return processed;
+  }
+
+  window.copyCodeBlock = function(btn) {
+    const codeEl = btn.closest('.code-block-wrap').querySelector('code');
+    if (!codeEl) return;
+    navigator.clipboard.writeText(codeEl.innerText).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'Успешно';
+      triggerHaptic();
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    });
+  };
+
+  window.useSuggestion = function(text) {
+    sendMessage(text);
   };
 
   function renderMessages() {
     const chat = chats.find(c => c.id === currentChatId);
-    const box = $('chatContainer'); box.innerHTML = '';
-    
-    if(!chat || !chat.messages.length) {
-      box.innerHTML = `<div class="welcome"><div class="welcome-logo">✦</div><h2>Nova AI</h2><p>Интеллектуальный помощник от студии Nova Labs.</p></div>`;
+    chatContainer.innerHTML = '';
+
+    if (!chat || chat.messages.length === 0) {
+      chatContainer.innerHTML = `
+        <div class="welcome">
+          <div class="welcome-logo">✦</div>
+          <h2>Nova AI</h2>
+          <p>Интеллектуальный помощник от студии Nova Labs. Выберите готовую идею или задайте свой вопрос.</p>
+          <div class="suggestions-grid">
+            <div class="suggestion-card" onclick="useSuggestion('Придумай 5 креативных идей для нового канала')">
+              <span class="suggestion-title">Идеи для проекта</span>
+              <span class="suggestion-desc">Свежие концепции для запуска</span>
+            </div>
+            <div class="suggestion-card" onclick="useSuggestion('Составь пошаговый план развития бренда с нуля')">
+              <span class="suggestion-title">План и стратегия</span>
+              <span class="suggestion-desc">Пошаговый разбор задачи</span>
+            </div>
+            <div class="suggestion-card" onclick="useSuggestion('Объясни простыми словами, как работают нейросети')">
+              <span class="suggestion-title">Простыми словами</span>
+              <span class="suggestion-desc">Сложная тема за минуту</span>
+            </div>
+            <div class="suggestion-card" onclick="useSuggestion('Составь цепляющий пост-анонс для запуска сервиса')">
+              <span class="suggestion-title">Текст и посты</span>
+              <span class="suggestion-desc">Сильный текст для соцсетей</span>
+            </div>
+          </div>
+        </div>
+      `;
       return;
     }
-    
+
     chat.messages.forEach(m => {
-      const d = document.createElement('div'); d.className = 'msg ' + m.role;
-      if(m.role === 'assistant') {
-        d.innerHTML = formatMd(m.text);
+      const div = document.createElement('div');
+      div.className = 'msg ' + m.role;
+      
+      if (m.role === 'assistant') {
+        div.innerHTML = formatMarkdown(m.text);
       } else {
-        if(m.imagePreview) {
-          const img = document.createElement('img'); img.src = m.imagePreview; img.className = 'msg-image'; d.appendChild(img);
+        if (m.imagePreview) {
+          const img = document.createElement('img');
+          img.src = m.imagePreview;
+          img.className = 'msg-image';
+          div.appendChild(img);
         }
-        const s = document.createElement('span'); s.textContent = m.text; d.appendChild(s);
+        const span = document.createElement('span');
+        span.textContent = m.text;
+        div.appendChild(span);
       }
-      box.appendChild(d);
+      chatContainer.appendChild(div);
     });
-    box.scrollTop = box.scrollHeight;
+    chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
-  function updateStatusUI(st) {
-    if(!st) return;
-    userIsPro = Boolean(st.isUnlimited || st.isAdmin);
-    $('quotaBadge').textContent = userIsPro ? (st.isAdmin ? 'Admin ∞' : 'Nova Pro ∞') : `${st.remaining} / ${st.limit}`;
-    $('proTagBadge').textContent = userIsPro ? 'PRO' : 'PRO 🔒';
-    if(st.isAdmin) $('openAdminBtn').style.display = 'block';
-    if(st.userId) { currentUserId = String(st.userId); $('userInfoLabel').textContent = `ID: ${st.userId}`; $('modalUserId').textContent = st.userId; }
+  // API и Отправка
+  function updateStatusUI(status) {
+    if (!status) return;
+    userIsPro = Boolean(status.isUnlimited || status.isAdmin);
+
+    if (status.priceStars) {
+      document.getElementById('buyStarsBtn').textContent = `⭐ Купить Nova Pro за ${status.priceStars} Stars`;
+    }
+
+    if (userIsPro) {
+      document.getElementById('quotaBadge').textContent = status.isAdmin ? 'Admin ∞' : 'Nova Pro ∞';
+      document.getElementById('quotaBadge').classList.add('unlimited');
+      document.getElementById('proTagBadge').textContent = 'PRO';
+    } else {
+      document.getElementById('quotaBadge').textContent = `${status.remaining} / ${status.limit}`;
+      document.getElementById('quotaBadge').classList.remove('unlimited');
+      document.getElementById('proTagBadge').textContent = 'PRO 🔒';
+    }
+
+    if (status.isAdmin) {
+      document.getElementById('openAdminBtn').style.display = 'block';
+    }
+
+    if (status.userId) {
+      currentUserId = String(status.userId);
+      document.getElementById('userInfoLabel').textContent = `ID: ${status.userId}`;
+      document.getElementById('modalUserId').textContent = status.userId;
+    }
   }
 
   async function fetchUserStatus() {
-    if(unsafeUser) {
-      currentUserId = String(unsafeUser.id); $('userInfoLabel').textContent = `ID: ${currentUserId}`; $('modalUserId').textContent = currentUserId;
-      if(currentUserId === ADMIN_ID) { userIsPro = true; $('quotaBadge').textContent = 'Admin ∞'; $('proTagBadge').textContent = 'PRO'; $('openAdminBtn').style.display = 'block'; }
+    if (unsafeUser) {
+      currentUserId = String(unsafeUser.id);
+      document.getElementById('userInfoLabel').textContent = `ID: ${currentUserId}`;
+      document.getElementById('modalUserId').textContent = currentUserId;
+      if (currentUserId === ADMIN_ID) {
+        userIsPro = true;
+        document.getElementById('quotaBadge').textContent = 'Admin ∞';
+        document.getElementById('proTagBadge').textContent = 'PRO';
+        document.getElementById('openAdminBtn').style.display = 'block';
+      }
     }
     try {
-      const r = await fetch(`${WORKER_URL}/api/status`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData }});
-      if(r.ok) updateStatusUI(await r.json());
-    } catch(e) {}
+      const res = await fetch(`${WORKER_URL}/api/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Telegram-Init-Data': initData
+        }
+      });
+      if (res.ok) updateStatusUI(await res.json());
+    } catch (e) {}
   }
 
-  async function sendMessage() {
-    const text = String($('promptInput').value || '').trim() || (attachedImage ? 'Опиши это изображение' : '');
-    if(!text || isSending) return;
+  async function sendMessage(overrideText) {
+    const rawText = (typeof overrideText === 'string') ? overrideText : promptInput.value;
+    const text = String(rawText || '').trim() || (attachedImage ? 'Опиши это изображение' : '');
     
-    haptic();
+    if (!text || isSending) return;
+    triggerHaptic();
+
     let chat = chats.find(c => c.id === currentChatId);
-    if(!chat) { createNewChat(); chat = chats.find(c => c.id === currentChatId); }
-    if(!chat.messages.length) chat.title = text.slice(0, 30);
-    
-    const att = attachedImage;
-    chat.messages.push({ role: 'user', text, imagePreview: att ? att.previewUrl : null });
-    
-    $('promptInput').value = ''; $('promptInput').style.height = 'auto'; clearAttachment();
-    saveChats(); renderChatList(); renderMessages();
-    
-    isSending = true; $('sendBtn').disabled = true;
-    const load = document.createElement('div'); load.className = 'msg assistant'; load.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
-    $('chatContainer').appendChild(load); $('chatContainer').scrollTop = $('chatContainer').scrollHeight;
-    
+    if (!chat) {
+      createNewChat();
+      chat = chats.find(c => c.id === currentChatId);
+    }
+
+    if (chat.messages.length === 0) {
+      chat.title = text.slice(0, 32) + (text.length > 32 ? '...' : '');
+    }
+
+    const currentAttachment = attachedImage;
+    chat.messages.push({
+      role: 'user',
+      text,
+      imagePreview: currentAttachment ? currentAttachment.previewUrl : null
+    });
+
+    promptInput.value = '';
+    promptInput.style.height = 'auto';
+    clearAttachment();
+    saveChats();
+    renderChatList();
+    renderMessages();
+
+    isSending = true;
+    sendBtn.disabled = true;
+
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'msg assistant';
+    loadingDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+    chatContainer.appendChild(loadingDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 35000);
+
     try {
-      const slice = chat.messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-10);
-      const contents = slice.map((m, i) => {
+      const historySlice = chat.messages
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .slice(-10);
+
+      const contents = historySlice.map((m, idx) => {
         const parts = [{ text: m.text }];
-        if(i === slice.length - 1 && att) parts.push({ inlineData: { mimeType: att.mimeType, data: att.data }});
-        return { role: m.role === 'assistant' ? 'model' : 'user', parts };
+        if (idx === historySlice.length - 1 && currentAttachment) {
+          parts.push({
+            inlineData: {
+              mimeType: currentAttachment.mimeType,
+              data: currentAttachment.data
+            }
+          });
+        }
+        return {
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts
+        };
       });
-      
-      const r = await fetch(`${WORKER_URL}/api/chat`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData },
-        body: JSON.stringify({ model: selectedModel, contents })
+
+      const res = await fetch(`${WORKER_URL}/api/chat`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Telegram-Init-Data': initData
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          contents
+        })
       });
+
+      clearTimeout(timeoutId);
+      const payload = await res.json();
+      loadingDiv.remove();
+
+      if (!res.ok) throw { message: payload.error || 'Ошибка сервера', status: res.status };
+
+      const replyText = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Пустой ответ.';
+      chat.messages.push({ role: 'assistant', text: replyText });
+      saveChats();
+      renderMessages();
+      triggerHaptic();
+
+      if (payload.status) updateStatusUI(payload.status);
       
-      const p = await r.json(); load.remove();
-      if(!r.ok) throw { message: p.error || 'Ошибка', status: r.status };
+    } catch (err) {
+      clearTimeout(timeoutId);
+      loadingDiv.remove();
+      chat.messages.pop();
+      saveChats();
+
+      const errDiv = document.createElement('div');
+      errDiv.className = 'msg error';
+      errDiv.textContent = err.name === 'AbortError' ? 'Время ожидания истекло.' : (err.message || 'Ошибка соединения');
       
-      chat.messages.push({ role: 'assistant', text: p.data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Пустой ответ.' });
-      saveChats(); renderMessages(); haptic();
-      if(p.status) updateStatusUI(p.status);
-    } catch(e) {
-      load.remove(); chat.messages.pop(); saveChats();
-      const ed = document.createElement('div'); ed.className = 'msg error'; ed.textContent = e.message || 'Ошибка связи';
-      if(e.status === 402 || e.status === 403) { const b = document.createElement('button'); b.className = 'copy-btn'; b.style.marginTop = '6px'; b.textContent = 'Купить Nova Pro'; b.onclick = openProModal; ed.appendChild(b); }
-      $('chatContainer').appendChild(ed);
-    } finally { isSending = false; $('sendBtn').disabled = false; }
+      if (err.status === 402 || err.status === 403) {
+        const b = document.createElement('button');
+        b.className = 'copy-btn';
+        b.style.marginTop = '8px';
+        b.textContent = 'Купить Nova Pro';
+        b.onclick = openProModal;
+        errDiv.appendChild(b);
+      }
+      chatContainer.appendChild(errDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    } finally {
+      isSending = false;
+      sendBtn.disabled = false;
+    }
   }
 
-  // Admin & Stars logic
+  // Оплата и Админка
   window.runAdminAction = async (action) => {
-    const target = $('adminTargetInput').value.trim();
-    if(!target) { $('adminStatusText').textContent = 'Введите ID'; return; }
-    $('adminStatusText').textContent = 'Выполняю...';
+    const target = document.getElementById('adminTargetInput').value.trim();
+    const statusEl = document.getElementById('adminStatusText');
+    if (!target) { statusEl.textContent = 'Введите ID'; return; }
+    
+    statusEl.textContent = 'Выполняю...';
     try {
-      const r = await fetch(`${WORKER_URL}/api/admin`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData }, body: JSON.stringify({ action, target }) });
-      const d = await r.json(); if(!r.ok) throw new Error(d.error);
-      $('adminStatusText').textContent = d.message; haptic();
-    } catch(e) { $('adminStatusText').textContent = e.message; }
+      const res = await fetch(`${WORKER_URL}/api/admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData },
+        body: JSON.stringify({ action, target })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      statusEl.textContent = data.message;
+      triggerHaptic();
+    } catch (e) {
+      statusEl.textContent = e.message;
+    }
   };
 
   window.buyWithStars = async () => {
-    $('proStatusText').textContent = 'Создаём счёт Telegram Stars...'; $('buyStarsBtn').disabled = true;
+    const statusEl = document.getElementById('proStatusText');
+    const btn = document.getElementById('buyStarsBtn');
+    statusEl.textContent = 'Создаём счёт Telegram Stars...';
+    btn.disabled = true;
+    
     try {
-      const r = await fetch(`${WORKER_URL}/api/create-invoice`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData }, body: JSON.stringify({ userId: currentUserId }) });
-      const d = await r.json(); if(!r.ok || !d.invoiceLink) throw new Error(d.error || 'Не удалось создать счёт');
-      $('proStatusText').textContent = '';
-      if(tg?.openInvoice) {
-        tg.openInvoice(d.invoiceLink, st => {
-          if(st === 'paid') { $('proStatusText').textContent = 'Оплата успешна! Активируем Nova Pro...'; setTimeout(() => { fetchUserStatus(); closeProModal(); }, 1200); }
-          else if(st === 'cancelled') $('proStatusText').textContent = 'Оплата отменена.';
+      const res = await fetch(`${WORKER_URL}/api/create-invoice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData },
+        body: JSON.stringify({ userId: currentUserId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.invoiceLink) throw new Error(data.error || 'Не удалось создать счёт');
+      
+      statusEl.textContent = '';
+      if (tg && typeof tg.openInvoice === 'function') {
+        tg.openInvoice(data.invoiceLink, (status) => {
+          if (status === 'paid') {
+            statusEl.textContent = 'Оплата прошла успешно! Активируем Nova Pro...';
+            setTimeout(() => { fetchUserStatus(); closeProModal(); }, 1200);
+          } else if (status === 'cancelled') {
+            statusEl.textContent = 'Оплата отменена.';
+          } else {
+            statusEl.textContent = 'Ошибка при проведении платежа.';
+          }
         });
-      } else window.open(d.invoiceLink, '_blank');
-    } catch(e) { $('proStatusText').textContent = e.message; } finally { $('buyStarsBtn').disabled = false; }
+      } else {
+        window.open(data.invoiceLink, '_blank');
+      }
+    } catch (err) {
+      statusEl.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+    }
   };
 
   window.contactAdminForPro = () => {
-    if(navigator.clipboard && currentUserId) navigator.clipboard.writeText(currentUserId).catch(() => {});
-    const link = `tg://user?id=${ADMIN_ID}`;
-    if(tg?.openTelegramLink) tg.openTelegramLink(link); else window.open(link, '_blank');
-    $('proStatusText').textContent = `Ваш ID скопирован — отправьте его администратору.`;
+    if (navigator.clipboard && currentUserId) {
+      navigator.clipboard.writeText(currentUserId).catch(() => {});
+    }
+    const adminDeepLink = `tg://user?id=${ADMIN_ID}`;
+    if (tg && typeof tg.openTelegramLink === 'function') {
+      tg.openTelegramLink(adminDeepLink);
+    } else {
+      window.open(adminDeepLink, '_blank');
+    }
+    document.getElementById('proStatusText').textContent = `Ваш ID скопирован — отправьте его администратору.`;
   };
 
-  if(!chats.length) createNewChat(); else { currentChatId = chats[0].id; renderChatList(); renderMessages(); }
+  // Инициализация
+  if (chats.length === 0) {
+    createNewChat();
+  } else {
+    currentChatId = chats[0].id;
+    renderChatList();
+    renderMessages();
+  }
   fetchUserStatus();
 </script>
 </body>
