@@ -1,1720 +1,394 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Nova AI — Nova Labs</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    :root {
-      --bg-primary: #121212;
-      --bg-secondary: #1a1a1a;
-      --bg-tertiary: #242424;
-      --bg-code: #0d0d0d;
-      --accent: #e5e5e5;
-      --accent-text: #121212;
-      --accent-hover: #ffffff;
-      --text-primary: #f4f4f5;
-      --text-secondary: #a1a1aa;
-      --border: #2e2e32;
-      --danger: #dc2626;
-      --success: #16a34a;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* Header */
-    .header {
-      height: 56px;
-      padding: 0 14px;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-      z-index: 10;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .icon-btn {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 17px;
-    }
-
-    .icon-btn:active {
-      background: #2f2f2f;
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .brand-title {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .brand-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--text-secondary);
-    }
-
-    .brand-sub {
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
-
-    .quota-badge {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 11px;
-      border-radius: 999px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      cursor: pointer;
-    }
-
-    .quota-badge.unlimited {
-      background: #262626;
-      border-color: #404040;
-      color: #f4f4f5;
-    }
-
-    /* Sidebar Drawer */
-    .drawer-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      z-index: 40;
-    }
-
-    .drawer-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .drawer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 280px;
-      max-width: 82vw;
-      background: var(--bg-secondary);
-      border-right: 1px solid var(--border);
-      transform: translateX(-100%);
-      transition: transform 0.22s ease;
-      z-index: 50;
-      display: flex;
-      flex-direction: column;
-      padding: 14px;
-    }
-
-    .drawer.open {
-      transform: translateX(0);
-    }
-
-    .drawer-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-
-    .new-chat-btn {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--accent);
-      color: var(--accent-text);
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin-bottom: 16px;
-    }
-
-    .new-chat-btn:active {
-      background: var(--accent-hover);
-    }
-
-    .chat-list-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      letter-spacing: 0.7px;
-      margin-bottom: 8px;
-      padding-left: 2px;
-    }
-
-    .chat-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .chat-item {
-      padding: 10px 10px;
-      border-radius: 10px;
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--text-primary);
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      cursor: pointer;
-    }
-
-    .chat-item.active {
-      background: var(--bg-tertiary);
-      border-color: var(--border);
-    }
-
-    .chat-item-title {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      flex: 1;
-    }
-
-    .chat-delete {
-      color: var(--text-secondary);
-      background: none;
-      border: none;
-      font-size: 14px;
-      padding: 2px 5px;
-      cursor: pointer;
-    }
-
-    .drawer-footer {
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .pro-promo-btn {
-      width: 100%;
-      padding: 11px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--accent);
-      color: var(--accent-text);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .pro-promo-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .secondary-btn {
-      width: 100%;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .admin-open-btn {
-      width: 100%;
-      padding: 9px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: none;
-    }
-
-    /* Chat Area */
-    .chat-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    /* Welcome & Quick Prompts */
-    .welcome {
-      margin: auto;
-      text-align: center;
-      max-width: 390px;
-      width: 100%;
-      padding: 12px 4px;
-    }
-
-    .welcome-logo {
-      width: 52px;
-      height: 52px;
-      border-radius: 14px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      margin: 0 auto 14px;
-    }
-
-    .welcome h2 {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .welcome p {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.45;
-      margin-bottom: 20px;
-    }
-
-    .suggestions-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 9px;
-      text-align: left;
-    }
-
-    .suggestion-card {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 11px 12px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .suggestion-card:active {
-      background: var(--bg-tertiary);
-      border-color: #52525b;
-    }
-
-    .suggestion-title {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .suggestion-desc {
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.35;
-    }
-
-    /* Messages & Markdown */
-    .msg {
-      max-width: 88%;
-      padding: 11px 14px;
-      border-radius: 14px;
-      font-size: 14px;
-      line-height: 1.55;
-      word-wrap: break-word;
-    }
-
-    .msg.user {
-      align-self: flex-end;
-      background: #2b2b2f;
-      border: 1px solid #3f3f46;
-      color: #ffffff;
-      border-bottom-right-radius: 4px;
-      white-space: pre-wrap;
-    }
-
-    .msg-image {
-      max-width: 210px;
-      max-height: 210px;
-      border-radius: 9px;
-      display: block;
-      margin-bottom: 6px;
-      border: 1px solid var(--border);
-    }
-
-    .msg.assistant {
-      align-self: flex-start;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      border-bottom-left-radius: 4px;
-    }
-
-    .msg.assistant p {
-      margin-bottom: 8px;
-    }
-
-    .msg.assistant p:last-child {
-      margin-bottom: 0;
-    }
-
-    .msg.assistant ul, .msg.assistant ol {
-      margin: 6px 0 8px 18px;
-    }
-
-    .msg.assistant li {
-      margin-bottom: 4px;
-    }
-
-    .msg.assistant h3, .msg.assistant h4 {
-      margin: 10px 0 6px;
-      font-size: 15px;
-      color: #fff;
-    }
-
-    .msg.assistant code.inline-code {
-      background: var(--bg-tertiary);
-      padding: 2px 6px;
-      border-radius: 5px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12.5px;
-      color: #e4e4e7;
-    }
-
-    .code-block-wrap {
-      margin: 8px 0;
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      background: var(--bg-code);
-    }
-
-    .code-block-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 10px;
-      background: #161616;
-      border-bottom: 1px solid var(--border);
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
-
-    .copy-code-btn {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      border-radius: 6px;
-      padding: 2px 8px;
-      font-size: 11px;
-      cursor: pointer;
-    }
-
-    .code-block-wrap pre {
-      padding: 10px;
-      overflow-x: auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12.5px;
-      line-height: 1.45;
-      color: #e5e7eb;
-    }
-
-    .msg.error {
-      align-self: center;
-      background: #221515;
-      border: 1px solid #452222;
-      color: #fca5a5;
-      font-size: 13px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .upgrade-inline-btn {
-      background: var(--accent);
-      border: none;
-      color: var(--accent-text);
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    /* Typing Dots Animation */
-    .typing-dots {
-      display: inline-flex;
-      gap: 4px;
-      padding: 4px 2px;
-      align-items: center;
-    }
-
-    .typing-dots span {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--text-secondary);
-      animation: bounceDot 1.2s infinite ease-in-out;
-    }
-
-    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes bounceDot {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-
-    /* Input Bar & Image Preview */
-    .input-wrapper {
-      padding: 10px 12px 14px;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .input-box {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 9px 11px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .input-box:focus-within {
-      border-color: #52525b;
-    }
-
-    .attach-preview {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 6px 9px;
-      font-size: 12px;
-    }
-
-    .attach-preview.active {
-      display: flex;
-    }
-
-    .attach-preview-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      overflow: hidden;
-    }
-
-    .attach-thumb {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      object-fit: cover;
-    }
-
-    textarea {
-      width: 100%;
-      background: transparent;
-      border: none;
-      color: var(--text-primary);
-      font-size: 14px;
-      resize: none;
-      max-height: 110px;
-      outline: none;
-      line-height: 1.4;
-    }
-
-    .input-controls {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .controls-left {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .attach-btn {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      width: 32px;
-      height: 32px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      cursor: pointer;
-    }
-
-    .model-trigger-btn {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 6px 11px;
-      font-size: 12.5px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .model-trigger-btn:active {
-      background: #27272a;
-    }
-
-    .model-chevron {
-      font-size: 10px;
-      color: var(--text-secondary);
-    }
-
-    .send-btn {
-      background: var(--accent);
-      color: var(--accent-text);
-      border: none;
-      border-radius: 9px;
-      padding: 7px 15px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .send-btn:active {
-      background: var(--accent-hover);
-    }
-
-    .send-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    /* Bottom Sheet Model Selector */
-    .sheet-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      z-index: 55;
-    }
-
-    .sheet-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .model-sheet {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
-      border-radius: 20px 20px 0 0;
-      padding: 12px 16px 24px;
-      transform: translateY(100%);
-      transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
-      z-index: 60;
-      max-width: 520px;
-      margin: 0 auto;
-    }
-
-    .model-sheet.open {
-      transform: translateY(0);
-    }
-
-    .sheet-handle {
-      width: 36px;
-      height: 4px;
-      border-radius: 99px;
-      background: #3f3f46;
-      margin: 0 auto 14px;
-    }
-
-    .sheet-title {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      padding: 0 2px;
-    }
-
-    .model-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .model-card {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      border-radius: 13px;
-      padding: 12px 13px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      cursor: pointer;
-      text-align: left;
-    }
-
-    .model-card.selected {
-      border-color: var(--accent);
-      background: #27272a;
-    }
-
-    .model-card-left {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
-    .model-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 9px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-    }
-
-    .model-info {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .model-name-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .model-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .model-tag {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 5px;
-      background: #3f3f46;
-      color: #f4f4f5;
-      letter-spacing: 0.3px;
-    }
-
-    .model-desc {
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.35;
-    }
-
-    .model-check {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 1.5px solid #52525b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      flex-shrink: 0;
-      color: var(--accent-text);
-    }
-
-    .model-card.selected .model-check {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    /* Modals */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.72);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 70;
-    }
-
-    .modal-overlay.open {
-      display: flex;
-    }
-
-    .modal {
-      width: 100%;
-      max-width: 370px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-
-    .modal h3 {
-      font-size: 17px;
-    }
-
-    .modal input {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      font-size: 14px;
-      margin-bottom: 12px;
-      outline: none;
-    }
-
-    .pro-features {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-      margin-bottom: 14px;
-      font-size: 13px;
-      color: var(--text-primary);
-    }
-
-    .pro-features li {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .id-copy-box {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 11px;
-      margin-bottom: 14px;
-      font-size: 12px;
-    }
-
-    .copy-id-btn {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      border-radius: 7px;
-      padding: 4px 9px;
-      font-size: 11px;
-      cursor: pointer;
-    }
-
-    .pro-actions-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .admin-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .admin-btn {
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      color: #fff;
-    }
-
-    .btn-grant { background: var(--success); }
-    .btn-reset { background: #3f3f46; }
-    .btn-revoke { background: var(--danger); }
-
-    .admin-status {
-      margin-top: 10px;
-      font-size: 12px;
-      color: var(--text-secondary);
-      text-align: center;
-      min-height: 16px;
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>Nova AI — Nova Labs</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg1:#121212;--bg2:#1a1a1a;--bg3:#242424;--code:#0d0d0d;--acc:#e5e5e5;--acct:#121212;--txt1:#f4f4f5;--txt2:#a1a1aa;--brd:#2e2e32;--err:#dc2626;--ok:#16a34a}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg1);color:var(--txt1);height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.header{height:56px;padding:0 14px;background:var(--bg2);border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.header-left{display:flex;align-items:center;gap:10px}
+.icon-btn{background:var(--bg3);border:1px solid var(--brd);color:var(--txt1);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px}
+.brand-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
+.brand-dot{width:6px;height:6px;border-radius:50%;background:var(--txt2)}
+.brand-sub{font-size:11px;color:var(--txt2)}
+.quota-badge{font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;background:var(--bg3);border:1px solid var(--brd);cursor:pointer}
+.drawer-overlay,.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+.drawer-overlay.open,.sheet-overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:82vw;background:var(--bg2);border-right:1px solid var(--brd);transform:translateX(-100%);transition:transform .22s;z-index:50;display:flex;flex-direction:column;padding:14px}
+.drawer.open{transform:translateX(0)}
+.drawer-header,.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.new-chat-btn,.pro-promo-btn{width:100%;padding:11px;border-radius:10px;border:1px solid var(--brd);background:var(--acc);color:var(--acct);font-weight:700;font-size:13px;cursor:pointer;text-align:center}
+.secondary-btn,.admin-open-btn{width:100%;padding:10px;border-radius:10px;border:1px solid var(--brd);background:var(--bg3);color:var(--txt1);font-size:13px;font-weight:600;cursor:pointer;text-align:center}
+.admin-open-btn{display:none}
+.chat-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.chat-item{padding:10px;border-radius:10px;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;border:1px solid transparent}
+.chat-item.active{background:var(--bg3);border-color:var(--brd)}
+.chat-item-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.chat-delete{color:var(--txt2);background:none;border:none;font-size:14px;cursor:pointer}
+.drawer-footer{border-top:1px solid var(--brd);padding-top:12px;margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.chat-container{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:12px}
+.welcome{margin:auto;text-align:center;max-width:390px;width:100%}
+.welcome-logo{width:50px;height:50px;border-radius:14px;background:var(--bg3);border:1px solid var(--brd);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 12px}
+.welcome p{font-size:13px;color:var(--txt2);margin:6px 0 18px;line-height:1.4}
+.suggestions-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left}
+.suggestion-card{background:var(--bg2);border:1px solid var(--brd);border-radius:12px;padding:11px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.suggestion-title{font-size:12.5px;font-weight:600}
+.suggestion-desc{font-size:11px;color:var(--txt2);line-height:1.3}
+.msg{max-width:88%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.55;word-wrap:break-word}
+.msg.user{align-self:flex-end;background:#2b2b2f;border:1px solid #3f3f46;color:#fff;border-bottom-right-radius:4px;white-space:pre-wrap}
+.msg.assistant{align-self:flex-start;background:var(--bg2);border:1px solid var(--brd);border-bottom-left-radius:4px}
+.msg.error{align-self:center;background:#221515;border:1px solid #452222;color:#fca5a5;font-size:13px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.msg-image{max-width:200px;border-radius:8px;display:block;margin-bottom:6px}
+.code-block-wrap{margin:8px 0;border-radius:10px;overflow:hidden;border:1px solid var(--brd);background:var(--code)}
+.code-block-header{display:flex;justify-content:space-between;padding:5px 10px;background:#161616;border-bottom:1px solid var(--brd);font-size:11px;color:var(--txt2)}
+.copy-code-btn,.copy-id-btn{background:var(--bg3);border:1px solid var(--brd);color:var(--txt1);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer}
+.code-block-wrap pre{padding:10px;overflow-x:auto;font-family:monospace;font-size:12.5px;color:#e5e7eb}
+.input-wrapper{padding:10px 12px 14px;background:var(--bg2);border-top:1px solid var(--brd)}
+.input-box{background:var(--bg3);border:1px solid var(--brd);border-radius:14px;padding:9px 11px;display:flex;flex-direction:column;gap:8px}
+.attach-preview{display:none;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:5px 9px;font-size:12px}
+.attach-preview.active{display:flex}
+.attach-thumb{width:26px;height:26px;border-radius:5px;object-fit:cover}
+textarea{width:100%;background:transparent;border:none;color:var(--txt1);font-size:14px;resize:none;max-height:100px;outline:none}
+.input-controls{display:flex;align-items:center;justify-content:space-between}
+.controls-left{display:flex;align-items:center;gap:6px}
+.attach-btn{background:var(--bg2);color:var(--txt1);border:1px solid var(--brd);border-radius:10px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.model-trigger-btn{background:var(--bg2);color:var(--txt1);border:1px solid var(--brd);border-radius:10px;padding:6px 11px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.send-btn{background:var(--acc);color:var(--acct);border:none;border-radius:9px;padding:7px 15px;font-size:13px;font-weight:600;cursor:pointer}
+.send-btn:disabled{opacity:.45}
+.model-sheet{position:fixed;left:0;right:0;bottom:0;background:var(--bg2);border-top:1px solid var(--brd);border-radius:20px 20px 0 0;padding:12px 16px 24px;transform:translateY(100%);transition:transform .24s;z-index:60;max-width:520px;margin:0 auto}
+.model-sheet.open{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:99px;background:#3f3f46;margin:0 auto 12px}
+.model-cards{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.model-card{background:var(--bg3);border:1px solid var(--brd);border-radius:13px;padding:11px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;text-align:left;color:var(--txt1)}
+.model-card.selected{border-color:var(--acc);background:#27272a}
+.model-card-left{display:flex;align-items:flex-start;gap:10px}
+.model-icon{width:32px;height:32px;border-radius:8px;background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.model-name{font-size:14px;font-weight:600}
+.model-tag{font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:#3f3f46;margin-left:5px}
+.model-desc{font-size:11.5px;color:var(--txt2);display:block;margin-top:2px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:16px;z-index:70}
+.modal-overlay.open{display:flex}
+.modal{width:100%;max-width:365px;background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:18px}
+.modal input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--brd);background:var(--bg3);color:var(--txt1);margin-bottom:10px;outline:none}
+.pro-features{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:14px;font-size:13px}
+.id-copy-box{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:8px 11px;margin-bottom:12px;font-size:12px}
+.stack{display:flex;flex-direction:column;gap:8px}
+.admin-btn{padding:10px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;color:#fff}
+.admin-status{margin-top:10px;font-size:12px;color:var(--txt2);text-align:center;min-height:16px}
+</style>
 </head>
 <body>
-
-  <!-- Header -->
-  <header class="header">
-    <div class="header-left">
-      <button class="icon-btn" id="menuBtn" aria-label="Меню">☰</button>
-      <div class="brand">
-        <span class="brand-title">Nova AI <span class="brand-dot"></span></span>
-        <span class="brand-sub">Nova Labs</span>
-      </div>
-    </div>
-    <div class="quota-badge" id="quotaBadge" onclick="openProModal()">Загрузка...</div>
-  </header>
-
-  <!-- Drawer -->
-  <div class="drawer-overlay" id="drawerOverlay"></div>
-  <aside class="drawer" id="drawer">
-    <div class="drawer-header">
-      <strong>История чатов</strong>
-      <button class="icon-btn" id="closeDrawerBtn">✕</button>
-    </div>
-    <button class="new-chat-btn" id="newChatBtn">+ Новый чат</button>
-    <div class="chat-list-label">Ваши диалоги</div>
-    <div class="chat-list" id="chatList"></div>
-    <div class="drawer-footer">
-      <button class="pro-promo-btn" id="drawerProBtn" onclick="openProModal()">✦ Подписка Nova Pro</button>
-      <button class="admin-open-btn" id="openAdminBtn">Админ-панель Nova Labs</button>
-      <div style="font-size: 11px; color: var(--text-secondary); text-align: center;" id="userInfoLabel">
-        Гостевой режим
-      </div>
-    </div>
-  </aside>
-
-  <!-- Chat Messages -->
-  <main class="chat-container" id="chatContainer"></main>
-
-  <!-- Input Bar -->
-  <div class="input-wrapper">
-    <div class="input-box">
-      <div class="attach-preview" id="attachPreview">
-        <div class="attach-preview-left">
-          <img id="attachThumb" class="attach-thumb" src="" alt="preview" />
-          <span id="attachName" style="color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Фото прикреплено</span>
-        </div>
-        <button type="button" class="chat-delete" onclick="clearAttachment()">✕</button>
-      </div>
-      <textarea id="promptInput" rows="1" placeholder="Напишите запрос для Nova AI..."></textarea>
-      <input type="file" id="imageInput" accept="image/*" style="display: none;" />
-      <div class="input-controls">
-        <div class="controls-left">
-          <button type="button" class="attach-btn" id="attachBtn" title="Прикрепить изображение">📎</button>
-          <button type="button" class="model-trigger-btn" id="modelTriggerBtn">
-            <span id="currentModelIcon">⚡</span>
-            <span id="currentModelLabel">Nova Flash</span>
-            <span class="model-chevron">▾</span>
-          </button>
-        </div>
-        <button class="send-btn" id="sendBtn" type="button">Отправить</button>
-      </div>
+<header class="header">
+  <div class="header-left">
+    <button class="icon-btn" id="menuBtn">☰</button>
+    <div>
+      <div class="brand-title">Nova AI <span class="brand-dot"></span></div>
+      <div class="brand-sub">Nova Labs</div>
     </div>
   </div>
+  <div class="quota-badge" id="quotaBadge" onclick="openProModal()">Онлайн</div>
+</header>
 
-  <!-- Bottom Sheet: Model Selector -->
-  <div class="sheet-overlay" id="sheetOverlay"></div>
-  <div class="model-sheet" id="modelSheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">Выберите модель Nova</div>
-    <div class="model-cards">
-      <button type="button" class="model-card selected" data-model="flash" onclick="selectModel('flash')">
-        <div class="model-card-left">
-          <div class="model-icon">⚡</div>
-          <div class="model-info">
-            <div class="model-name-row">
-              <span class="model-name">Nova Flash</span>
-              <span class="model-tag">БАЗОВАЯ</span>
-            </div>
-            <span class="model-desc">Оптимальный баланс скорости и качества для любых повседневных задач</span>
-          </div>
-        </div>
-        <div class="model-check">✓</div>
-      </button>
-
-      <button type="button" class="model-card" data-model="lite" onclick="selectModel('lite')">
-        <div class="model-card-left">
-          <div class="model-icon">🪶</div>
-          <div class="model-info">
-            <div class="model-name-row">
-              <span class="model-name">Nova Lite</span>
-              <span class="model-tag">БЫСТРАЯ</span>
-            </div>
-            <span class="model-desc">Мгновенные ответы на простые вопросы, перевод и работа с текстом</span>
-          </div>
-        </div>
-        <div class="model-check"></div>
-      </button>
-
-      <button type="button" class="model-card" data-model="pro" onclick="selectModel('pro')">
-        <div class="model-card-left">
-          <div class="model-icon">🧠</div>
-          <div class="model-info">
-            <div class="model-name-row">
-              <span class="model-name">Nova Pro</span>
-              <span class="model-tag" id="proTagBadge">PRO 🔒</span>
-            </div>
-            <span class="model-desc">Максимальный интеллект: сложная аналитика, стратегии и генерация кода</span>
-          </div>
-        </div>
-        <div class="model-check"></div>
-      </button>
-    </div>
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-header"><strong>История чатов</strong><button class="icon-btn" id="closeDrawerBtn">✕</button></div>
+  <button class="new-chat-btn" id="newChatBtn">+ Новый чат</button>
+  <div class="chat-list" id="chatList"></div>
+  <div class="drawer-footer">
+    <button class="pro-promo-btn" onclick="openProModal()">✦ Подписка Nova Pro</button>
+    <button class="admin-open-btn" id="openAdminBtn">Админ-панель Nova Labs</button>
+    <div style="font-size:11px;color:var(--txt2);text-align:center" id="userInfoLabel">Гостевой режим</div>
   </div>
+</aside>
 
-  <!-- Pro Purchase Modal -->
-  <div class="modal-overlay" id="proModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>✦ Подписка Nova Pro</h3>
-        <button class="icon-btn" onclick="closeProModal()">✕</button>
+<main class="chat-container" id="chatContainer"></main>
+
+<div class="input-wrapper">
+  <div class="input-box">
+    <div class="attach-preview" id="attachPreview">
+      <div style="display:flex;align-items:center;gap:8px;overflow:hidden">
+        <img id="attachThumb" class="attach-thumb" src="" alt=""/>
+        <span id="attachName" style="color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Фото</span>
       </div>
-      <ul class="pro-features">
-        <li>• <strong>Безлимитные запросы</strong> без ограничения в 20 сообщений</li>
-        <li>• <strong>Модель Nova Pro</strong> для сложных аналитических задач</li>
-        <li>• <strong>Написание и разбор кода</strong> на любых языках</li>
-        <li>• <strong>Распознавание изображений</strong> и фотографий (📎)</li>
-      </ul>
-
-      <div class="id-copy-box">
-        <span>Ваш ID: <strong id="modalUserId" style="color: #fff;">—</strong></span>
-        <button type="button" class="copy-id-btn" id="copyIdBtn" onclick="copyUserId()">Скопировать ID</button>
-      </div>
-
-      <div class="pro-actions-stack">
-        <button type="button" class="pro-promo-btn" id="buyStarsBtn" onclick="buyWithStars()">
-          ⭐ Купить Nova Pro за 100 Stars
-        </button>
-        <button type="button" class="secondary-btn" onclick="contactAdminForPro()">
-          💬 Оформить через администратора
+      <button type="button" class="chat-delete" onclick="clearAttachment()">✕</button>
+    </div>
+    <textarea id="promptInput" rows="1" placeholder="Напишите запрос для Nova AI..."></textarea>
+    <input type="file" id="imageInput" accept="image/*" style="display:none"/>
+    <div class="input-controls">
+      <div class="controls-left">
+        <button type="button" class="attach-btn" id="attachBtn">📎</button>
+        <button type="button" class="model-trigger-btn" id="modelTriggerBtn">
+          <span id="currentModelIcon">⚡</span><span id="currentModelLabel">Nova Flash</span><span style="font-size:10px;color:var(--txt2)">▾</span>
         </button>
       </div>
-      <div class="admin-status" id="proStatusText"></div>
+      <button class="send-btn" id="sendBtn" type="button">Отправить</button>
     </div>
   </div>
+</div>
 
-  <!-- Admin Modal -->
-  <div class="modal-overlay" id="adminModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Админ-панель</h3>
-        <button class="icon-btn" id="closeAdminBtn">✕</button>
-      </div>
-      <input type="text" id="adminTargetInput" placeholder="Telegram ID или @username" />
-      <div class="admin-actions">
-        <button class="admin-btn btn-grant" onclick="runAdminAction('grant_unlimited')">Выдать Nova Pro ∞</button>
-        <button class="admin-btn btn-reset" onclick="runAdminAction('reset_limit')">Сбросить лимит на 20</button>
-        <button class="admin-btn btn-revoke" onclick="runAdminAction('revoke_unlimited')">Отключить Nova Pro</button>
-      </div>
-      <div class="admin-status" id="adminStatusText"></div>
-    </div>
+<div class="sheet-overlay" id="sheetOverlay"></div>
+<div class="model-sheet" id="modelSheet">
+  <div class="sheet-handle"></div>
+  <strong>Выберите модель Nova</strong>
+  <div class="model-cards">
+    <button type="button" class="model-card selected" data-model="flash" onclick="selectModel('flash')">
+      <div class="model-card-left"><div class="model-icon">⚡</div><div><span class="model-name">Nova Flash</span><span class="model-tag">БАЗОВАЯ</span><span class="model-desc">Оптимальный баланс скорости и качества</span></div></div>
+      <span class="mcheck">✓</span>
+    </button>
+    <button type="button" class="model-card" data-model="lite" onclick="selectModel('lite')">
+      <div class="model-card-left"><div class="model-icon">🪶</div><div><span class="model-name">Nova Lite</span><span class="model-tag">БЫСТРАЯ</span><span class="model-desc">Мгновенные ответы на простые вопросы</span></div></div>
+      <span class="mcheck"></span>
+    </button>
+    <button type="button" class="model-card" data-model="pro" onclick="selectModel('pro')">
+      <div class="model-card-left"><div class="model-icon">🧠</div><div><span class="model-name">Nova Pro</span><span class="model-tag" id="proTagBadge">PRO 🔒</span><span class="model-desc">Сложная аналитика, стратегии и написание кода</span></div></div>
+      <span class="mcheck"></span>
+    </button>
   </div>
+</div>
 
-  <script>
-    const WORKER_URL = 'https://nova-proxy.sorokinartem870.workers.dev';
-    const ADMIN_ID = '5546523537';
-    const tg = window.Telegram?.WebApp;
+<div class="modal-overlay" id="proModal">
+  <div class="modal">
+    <div class="modal-header"><h3>✦ Подписка Nova Pro</h3><button class="icon-btn" onclick="closeProModal()">✕</button></div>
+    <ul class="pro-features">
+      <li>• <strong>Безлимитные запросы</strong> (без лимита 20 сообщений)</li>
+      <li>• <strong>Модель Nova Pro</strong> для сложных задач</li>
+      <li>• <strong>Написание и разбор кода</strong> на любых языках</li>
+      <li>• <strong>Распознавание фотографий</strong> и документов (📎)</li>
+    </ul>
+    <div class="id-copy-box">
+      <span>Ваш ID: <strong id="modalUserId">—</strong></span>
+      <button type="button" class="copy-id-btn" id="copyIdBtn" onclick="copyUserId()">Скопировать ID</button>
+    </div>
+    <div class="stack">
+      <button type="button" class="pro-promo-btn" id="buyStarsBtn" onclick="buyWithStars()">⭐ Купить Nova Pro за 100 Stars</button>
+      <button type="button" class="secondary-btn" onclick="contactAdminForPro()">💬 Оформить через администратора</button>
+    </div>
+    <div class="admin-status" id="proStatusText"></div>
+  </div>
+</div>
 
-    if (tg) {
-      tg.ready();
-      tg.expand();
-    }
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Админ-панель</h3><button class="icon-btn" id="closeAdminBtn">✕</button></div>
+    <input type="text" id="adminTargetInput" placeholder="Telegram ID или @username"/>
+    <div class="stack">
+      <button class="admin-btn" style="background:var(--ok)" onclick="runAdminAction('grant_unlimited')">Выдать Nova Pro ∞</button>
+      <button class="admin-btn" style="background:#3f3f46" onclick="runAdminAction('reset_limit')">Сбросить лимит на 20</button>
+      <button class="admin-btn" style="background:var(--err)" onclick="runAdminAction('revoke_unlimited')">Отключить Nova Pro</button>
+    </div>
+    <div class="admin-status" id="adminStatusText"></div>
+  </div>
+</div>
 
-    const initData = tg?.initData || '';
-    const unsafeUser = tg?.initDataUnsafe?.user || null;
+<script>
+const WORKER_URL='https://nova-proxy.sorokinartem870.workers.dev';
+const ADMIN_ID='5546523537';
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();}
+const initData=tg?.initData||'';
+const unsafeUser=tg?.initDataUnsafe?.user||null;
 
-    let chats = JSON.parse(localStorage.getItem('nova_chats_v2') || '[]');
-    let currentChatId = null;
-    let selectedModel = 'flash';
-    let isSending = false;
-    let userIsPro = false;
-    let currentUserId = unsafeUser?.id ? String(unsafeUser.id) : '';
-    let attachedImage = null; // { mimeType, data, previewUrl, name }
+let chats=JSON.parse(localStorage.getItem('nova_chats_v2')||'[]');
+let currentChatId=null,selectedModel='flash',isSending=false,userIsPro=false;
+let currentUserId=unsafeUser?.id?String(unsafeUser.id):'';
+let attachedImage=null;
+const META={flash:{icon:'⚡',label:'Nova Flash'},lite:{icon:'🪶',label:'Nova Lite'},pro:{icon:'🧠',label:'Nova Pro'}};
 
-    const MODEL_META = {
-      flash: { icon: '⚡', label: 'Nova Flash' },
-      lite: { icon: '🪶', label: 'Nova Lite' },
-      pro: { icon: '🧠', label: 'Nova Pro' }
-    };
+const $=id=>document.getElementById(id);
+const toggleDrawer=o=>{$('drawer').classList.toggle('open',o);$('drawerOverlay').classList.toggle('open',o);};
+const toggleSheet=o=>{$('modelSheet').classList.toggle('open',o);$('sheetOverlay').classList.toggle('open',o);};
 
-    const chatContainer = document.getElementById('chatContainer');
-    const chatList = document.getElementById('chatList');
-    const promptInput = document.getElementById('promptInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const quotaBadge = document.getElementById('quotaBadge');
-    const openAdminBtn = document.getElementById('openAdminBtn');
-    const userInfoLabel = document.getElementById('userInfoLabel');
-    const modalUserId = document.getElementById('modalUserId');
-    const proTagBadge = document.getElementById('proTagBadge');
-    const buyStarsBtn = document.getElementById('buyStarsBtn');
-    const proStatusText = document.getElementById('proStatusText');
-    const imageInput = document.getElementById('imageInput');
-    const attachPreview = document.getElementById('attachPreview');
-    const attachThumb = document.getElementById('attachThumb');
-    const attachName = document.getElementById('attachName');
+$('menuBtn').onclick=()=>toggleDrawer(true);
+$('closeDrawerBtn').onclick=()=>toggleDrawer(false);
+$('drawerOverlay').onclick=()=>toggleDrawer(false);
+$('modelTriggerBtn').onclick=()=>toggleSheet(true);
+$('sheetOverlay').onclick=()=>toggleSheet(false);
 
-    // Bottom Sheet Model Selector controls
-    const modelSheet = document.getElementById('modelSheet');
-    const sheetOverlay = document.getElementById('sheetOverlay');
-    const toggleModelSheet = (open) => {
-      modelSheet.classList.toggle('open', open);
-      sheetOverlay.classList.toggle('open', open);
-    };
-    document.getElementById('modelTriggerBtn').onclick = () => toggleModelSheet(true);
-    sheetOverlay.onclick = () => toggleModelSheet(false);
+window.openProModal=()=>{toggleDrawer(false);$('proStatusText').textContent=userIsPro?'У вас уже активна подписка Nova Pro ∞':'';$('proModal').classList.add('open');};
+window.closeProModal=()=>$('proModal').classList.remove('open');
+$('openAdminBtn').onclick=()=>{toggleDrawer(false);$('adminModal').classList.add('open');};
+$('closeAdminBtn').onclick=()=>$('adminModal').classList.remove('open');
 
-    window.selectModel = (modelKey) => {
-      if (modelKey === 'pro' && !userIsPro) {
-        toggleModelSheet(false);
-        openProModal();
-        return;
-      }
-      selectedModel = modelKey;
-      document.getElementById('currentModelIcon').textContent = MODEL_META[modelKey].icon;
-      document.getElementById('currentModelLabel').textContent = MODEL_META[modelKey].label;
+window.selectModel=k=>{
+  if(k==='pro'&&!userIsPro){toggleSheet(false);openProModal();return;}
+  selectedModel=k;
+  $('currentModelIcon').textContent=META[k].icon;
+  $('currentModelLabel').textContent=META[k].label;
+  document.querySelectorAll('.model-card').forEach(c=>{
+    const s=c.dataset.model===k;
+    c.classList.toggle('selected',s);
+    c.querySelector('.mcheck').textContent=s?'✓':'';
+  });
+  toggleSheet(false);
+};
 
-      document.querySelectorAll('.model-card').forEach(card => {
-        const isSelected = card.dataset.model === modelKey;
-        card.classList.toggle('selected', isSelected);
-        card.querySelector('.model-check').textContent = isSelected ? '✓' : '';
+$('attachBtn').onclick=()=>{if(!userIsPro){openProModal();return;}$('imageInput').click();};
+$('imageInput').onchange=e=>{
+  const f=e.target.files?.[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const s=String(r.result||''),b=s.split(',')[1];if(!b)return;
+    attachedImage={mimeType:f.type||'image/jpeg',data:b,previewUrl:s,name:f.name||'Фото'};
+    $('attachThumb').src=s;$('attachName').textContent=attachedImage.name;$('attachPreview').classList.add('active');
+  };
+  r.readAsDataURL(f);
+};
+window.clearAttachment=()=>{attachedImage=null;$('imageInput').value='';$('attachPreview').classList.remove('active');};
+
+window.copyUserId=()=>{
+  const id=currentUserId||$('modalUserId').textContent;
+  if(!id||id==='—')return;
+  navigator.clipboard.writeText(id).then(()=>{$('copyIdBtn').textContent='Скопировано!';setTimeout(()=>{$('copyIdBtn').textContent='Скопировать ID';},1500);});
+};
+
+window.buyWithStars=async()=>{
+  $('proStatusText').textContent='Создаём счёт Telegram Stars...';
+  $('buyStarsBtn').disabled=true;
+  try{
+    const r=await fetch(`${WORKER_URL}/api/create-invoice`,{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData},body:JSON.stringify({userId:currentUserId})});
+    const d=await r.json();
+    if(!r.ok||!d.invoiceLink)throw new Error(d.error||'Не удалось создать счёт');
+    $('proStatusText').textContent='';
+    if(tg?.openInvoice){
+      tg.openInvoice(d.invoiceLink,st=>{
+        if(st==='paid'){$('proStatusText').textContent='Оплата успешна! Активируем Nova Pro...';setTimeout(()=>{fetchUserStatus();closeProModal();},1200);}
+        else if(st==='cancelled')$('proStatusText').textContent='Оплата отменена.';
       });
+    }else window.open(d.invoiceLink,'_blank');
+  }catch(e){$('proStatusText').textContent=e.message;}
+  finally{$('buyStarsBtn').disabled=false;}
+};
 
-      toggleModelSheet(false);
-    };
+window.contactAdminForPro=()=>{
+  if(navigator.clipboard&¤tUserId)navigator.clipboard.writeText(currentUserId).catch(()=>{});
+  const link=`tg://user?id=${ADMIN_ID}`;
+  if(tg?.openTelegramLink)tg.openTelegramLink(link);else window.open(link,'_blank');
+  $('proStatusText').textContent=`Ваш ID (${currentUserId||'—'}) скопирован — отправьте его администратору.`;
+};
 
-    // Image Attachment (Pro Only)
-    document.getElementById('attachBtn').onclick = () => {
-      if (!userIsPro) {
-        openProModal();
-        return;
-      }
-      imageInput.click();
-    };
+$('promptInput').addEventListener('input',()=>{$('promptInput').style.height='auto';$('promptInput').style.height=Math.min($('promptInput').scrollHeight,100)+'px';});
+$('promptInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
+$('sendBtn').onclick=()=>sendMessage();
+$('newChatBtn').onclick=()=>{createNewChat();toggleDrawer(false);};
 
-    imageInput.onchange = (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const resultStr = String(reader.result || '');
-        const base64Data = resultStr.split(',')[1];
-        if (!base64Data) return;
-        attachedImage = {
-          mimeType: file.type || 'image/jpeg',
-          data: base64Data,
-          previewUrl: resultStr,
-          name: file.name || 'Изображение'
-        };
-        attachThumb.src = resultStr;
-        attachName.textContent = attachedImage.name;
-        attachPreview.classList.add('active');
-      };
-      reader.readAsDataURL(file);
-    };
+function saveChats(){localStorage.setItem('nova_chats_v2',JSON.stringify(chats));}
+function createNewChat(){const id='chat_'+Date.now();chats.unshift({id,title:'Новый диалог',messages:[]});currentChatId=id;saveChats();renderChatList();renderMessages();}
+function deleteChat(id,e){e.stopPropagation();chats=chats.filter(c=>c.id!==id);if(currentChatId===id)currentChatId=chats[0]?.id||null;if(!currentChatId)createNewChat();else{saveChats();renderChatList();renderMessages();}}
 
-    window.clearAttachment = () => {
-      attachedImage = null;
-      imageInput.value = '';
-      attachPreview.classList.remove('active');
-    };
+function renderChatList(){
+  $('chatList').innerHTML='';
+  chats.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='chat-item'+(c.id===currentChatId?' active':'');
+    d.onclick=()=>{currentChatId=c.id;renderChatList();renderMessages();toggleDrawer(false);};
+    d.innerHTML=`<span class="chat-item-title"></span><button class="chat-delete">✕</button>`;
+    d.querySelector('.chat-item-title').textContent=c.title;
+    d.querySelector('.chat-delete').onclick=e=>deleteChat(c.id,e);
+    $('chatList').appendChild(d);
+  });
+}
 
-    // Drawer controls
-    const drawer = document.getElementById('drawer');
-    const drawerOverlay = document.getElementById('drawerOverlay');
-    const toggleDrawer = (open) => {
-      drawer.classList.toggle('open', open);
-      drawerOverlay.classList.toggle('open', open);
-    };
-    document.getElementById('menuBtn').onclick = () => toggleDrawer(true);
-    document.getElementById('closeDrawerBtn').onclick = () => toggleDrawer(false);
-    drawerOverlay.onclick = () => toggleDrawer(false);
+function esc(s){return s.replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>');}
+function formatMd(t){
+  const blocks=[];
+  let p=t.replace(/```(\w*)\n([\s\S]*?)```/g,(_,l,c)=>{
+    blocks.push(`<div class="code-block-wrap"><div class="code-block-header"><span>${esc(l||'code')}</span><button class="copy-code-btn" onclick="copyCode(this)">Копировать</button></div><pre><code>${esc(c.trim())}</code></pre></div>`);
+    return `@@CB_${blocks.length-1}@@`;
+  });
+  p=esc(p).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  blocks.forEach((b,i)=>{p=p.replace(`@@CB_${i}@@`,b);});
+  return p;
+}
+window.copyCode=b=>{const c=b.closest('.code-block-wrap').querySelector('code');if(c)navigator.clipboard.writeText(c.innerText).then(()=>{b.textContent='Скопировано';setTimeout(()=>b.textContent='Копировать',1500);});};
+window.useSuggestion=t=>sendMessage(t);
 
-    // Pro Modal & Real Purchase
-    const proModal = document.getElementById('proModal');
-    window.openProModal = () => {
-      toggleDrawer(false);
-      proStatusText.textContent = userIsPro ? 'У вас уже активна подписка Nova Pro ∞' : '';
-      proModal.classList.add('open');
-    };
-    window.closeProModal = () => proModal.classList.remove('open');
+function renderMessages(){
+  const chat=chats.find(c=>c.id===currentChatId);
+  const box=$('chatContainer');box.innerHTML='';
+  if(!chat||!chat.messages.length){
+    box.innerHTML=`<div class="welcome"><div class="welcome-logo">✦</div><h2>Nova AI</h2><p>Интеллектуальный помощник от студии Nova Labs.</p><div class="suggestions-grid"><div class="suggestion-card" onclick="useSuggestion('Придумай 5 идей для канала в Telegram')"><span class="suggestion-title">Идеи для проекта</span><span class="suggestion-desc">Концепции для запуска</span></div><div class="suggestion-card" onclick="useSuggestion('Составь пошаговый план развития проекта')"><span class="suggestion-title">План и стратегия</span><span class="suggestion-desc">Разбор любой задачи</span></div><div class="suggestion-card" onclick="useSuggestion('Объясни простыми словами, как работают нейросети')"><span class="suggestion-title">Простыми словами</span><span class="suggestion-desc">Сложная тема за минуту</span></div><div class="suggestion-card" onclick="useSuggestion('Напиши цепляющий пост-анонс для канала')"><span class="suggestion-title">Текст и посты</span><span class="suggestion-desc">Сильный текст для соцсетей</span></div></div></div>`;
+    return;
+  }
+  chat.messages.forEach(m=>{
+    const d=document.createElement('div');d.className='msg '+m.role;
+    if(m.role==='assistant')d.innerHTML=formatMd(m.text);
+    else{if(m.imagePreview){const img=document.createElement('img');img.src=m.imagePreview;img.className='msg-image';d.appendChild(img);}const s=document.createElement('span');s.textContent=m.text;d.appendChild(s);}
+    box.appendChild(d);
+  });
+  box.scrollTop=box.scrollHeight;
+}
 
-    window.copyUserId = () => {
-      const idToCopy = currentUserId || modalUserId.textContent;
-      if (!idToCopy || idToCopy === '—') return;
-      navigator.clipboard.writeText(idToCopy).then(() => {
-        const btn = document.getElementById('copyIdBtn');
-        btn.textContent = 'Скопировано!';
-        setTimeout(() => { btn.textContent = 'Скопировать ID'; }, 1500);
-      });
-    };
+function updateStatusUI(st){
+  if(!st)return;
+  userIsPro=Boolean(st.isUnlimited||st.isAdmin);
+  if(st.priceStars)$('buyStarsBtn').textContent=`⭐ Купить Nova Pro за ${st.priceStars} Stars`;
+  $('quotaBadge').textContent=userIsPro?(st.isAdmin?'Admin ∞':'Nova Pro ∞'):`${st.remaining} / ${st.limit}`;
+  $('proTagBadge').textContent=userIsPro?'PRO':'PRO 🔒';
+  if(st.isAdmin)$('openAdminBtn').style.display='block';
+  if(st.userId){currentUserId=String(st.userId);$('userInfoLabel').textContent=`ID: ${st.userId}`;$('modalUserId').textContent=st.userId;}
+}
 
-    window.buyWithStars = async () => {
-      proStatusText.textContent = 'Создаём счёт Telegram Stars...';
-      buyStarsBtn.disabled = true;
-      try {
-        const res = await fetch(`${WORKER_URL}/api/create-invoice`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Telegram-Init-Data': initData
-          },
-          body: JSON.stringify({ userId: currentUserId })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.invoiceLink) {
-          throw new Error(data.error || 'Не удалось создать счёт на оплату');
-        }
+async function fetchUserStatus(){
+  if(unsafeUser){
+    currentUserId=String(unsafeUser.id);$('userInfoLabel').textContent=`ID: ${currentUserId}`;$('modalUserId').textContent=currentUserId;
+    if(currentUserId===ADMIN_ID){userIsPro=true;$('quotaBadge').textContent='Admin ∞';$('proTagBadge').textContent='PRO';$('openAdminBtn').style.display='block';}
+  }
+  try{
+    const r=await fetch(`${WORKER_URL}/api/status`,{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData}});
+    if(r.ok)updateStatusUI(await r.json());
+  }catch{}
+}
 
-        proStatusText.textContent = '';
-        if (tg && typeof tg.openInvoice === 'function') {
-          tg.openInvoice(data.invoiceLink, (status) => {
-            if (status === 'paid') {
-              proStatusText.textContent = 'Оплата прошла успешно! Активируем Nova Pro...';
-              setTimeout(() => {
-                fetchUserStatus();
-                closeProModal();
-              }, 1200);
-            } else if (status === 'cancelled') {
-              proStatusText.textContent = 'Оплата отменена.';
-            } else if (status === 'failed') {
-              proStatusText.textContent = 'Ошибка при проведении платежа.';
-            }
-          });
-        } else {
-          window.open(data.invoiceLink, '_blank');
-        }
-      } catch (err) {
-        proStatusText.textContent = err.message;
-      } finally {
-        buyStarsBtn.disabled = false;
-      }
-    };
-
-    window.contactAdminForPro = () => {
-      const idStr = currentUserId || 'не определён';
-      if (navigator.clipboard && currentUserId) {
-        navigator.clipboard.writeText(currentUserId).catch(() => {});
-      }
-      const adminDeepLink = `tg://user?id=${ADMIN_ID}`;
-      if (tg && typeof tg.openTelegramLink === 'function') {
-        tg.openTelegramLink(adminDeepLink);
-      } else {
-        window.open(adminDeepLink, '_blank');
-      }
-      proStatusText.textContent = `Ваш ID (${idStr}) скопирован — отправьте его администратору.`;
-    };
-
-    // Admin Modal controls
-    const adminModal = document.getElementById('adminModal');
-    openAdminBtn.onclick = () => {
-      toggleDrawer(false);
-      adminModal.classList.add('open');
-    };
-    document.getElementById('closeAdminBtn').onclick = () => adminModal.classList.remove('open');
-
-    // Auto-resize textarea
-    promptInput.addEventListener('input', () => {
-      promptInput.style.height = 'auto';
-      promptInput.style.height = Math.min(promptInput.scrollHeight, 110) + 'px';
+async function sendMessage(override){
+  const raw=(typeof override==='string')?override:$('promptInput').value;
+  const text=String(raw||'').trim()||(attachedImage?'Опиши это изображение':'');
+  if(!text||isSending)return;
+  let chat=chats.find(c=>c.id===currentChatId);
+  if(!chat){createNewChat();chat=chats.find(c=>c.id===currentChatId);}
+  if(!chat.messages.length)chat.title=text.slice(0,30);
+  const att=attachedImage;
+  chat.messages.push({role:'user',text,imagePreview:att?att.previewUrl:null});
+  $('promptInput').value='';$('promptInput').style.height='auto';clearAttachment();saveChats();renderChatList();renderMessages();
+  isSending=true;$('sendBtn').disabled=true;
+  const load=document.createElement('div');load.className='msg assistant';load.textContent='...';$('chatContainer').appendChild(load);
+  try{
+    const slice=chat.messages.filter(m=>m.role==='user'||m.role==='assistant').slice(-10);
+    const contents=slice.map((m,i)=>{
+      const parts=[{text:m.text}];
+      if(i===slice.length-1&&att)parts.push({inlineData:{mimeType:att.mimeType,data:att.data}});
+      return {role:m.role==='assistant'?'model':'user',parts};
     });
+    const r=await fetch(`${WORKER_URL}/api/chat`,{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData},body:JSON.stringify({model:selectedModel,contents})});
+    const p=await r.json();load.remove();
+    if(!r.ok)throw {message:p.error||'Ошибка',status:r.status};
+    const reply=p.data?.candidates?.[0]?.content?.parts?.[0]?.text||'Пустой ответ.';
+    chat.messages.push({role:'assistant',text:reply});saveChats();renderMessages();
+    if(p.status)updateStatusUI(p.status);
+  }catch(e){
+    load.remove();chat.messages.pop();saveChats();
+    const ed=document.createElement('div');ed.className='msg error';ed.textContent=e.message||'Ошибка связи';
+    if(e.status===402||e.status===403){const b=document.createElement('button');b.className='copy-id-btn';b.textContent='Купить Nova Pro';b.onclick=openProModal;ed.appendChild(b);}
+    $('chatContainer').appendChild(ed);
+  }finally{isSending=false;$('sendBtn').disabled=false;}
+}
 
-    promptInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
+window.runAdminAction=async action=>{
+  const target=$('adminTargetInput').value.trim();
+  if(!target){$('adminStatusText').textContent='Введите ID';return;}
+  $('adminStatusText').textContent='Выполняю...';
+  try{
+    const r=await fetch(`${WORKER_URL}/api/admin`,{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData},body:JSON.stringify({action,target})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error);
+    $('adminStatusText').textContent=d.message;
+  }catch(e){$('adminStatusText').textContent=e.message;}
+};
 
-    sendBtn.addEventListener('click', () => {
-      sendMessage();
-    });
-
-    document.getElementById('newChatBtn').onclick = () => {
-      createNewChat();
-      toggleDrawer(false);
-    };
-
-    function saveChats() {
-      localStorage.setItem('nova_chats_v2', JSON.stringify(chats));
-    }
-
-    function createNewChat() {
-      const id = 'chat_' + Date.now();
-      chats.unshift({ id, title: 'Новый диалог', messages: [] });
-      currentChatId = id;
-      saveChats();
-      renderChatList();
-      renderMessages();
-    }
-
-    function deleteChat(id, e) {
-      e.stopPropagation();
-      chats = chats.filter(c => c.id !== id);
-      if (currentChatId === id) {
-        currentChatId = chats[0]?.id || null;
-      }
-      if (!currentChatId) {
-        createNewChat();
-      } else {
-        saveChats();
-        renderChatList();
-        renderMessages();
-      }
-    }
-
-    function renderChatList() {
-      chatList.innerHTML = '';
-      chats.forEach(chat => {
-        const div = document.createElement('div');
-        div.className = 'chat-item' + (chat.id === currentChatId ? ' active' : '');
-        div.onclick = () => {
-          currentChatId = chat.id;
-          renderChatList();
-          renderMessages();
-          toggleDrawer(false);
-        };
-
-        const span = document.createElement('span');
-        span.className = 'chat-item-title';
-        span.textContent = chat.title;
-
-        const del = document.createElement('button');
-        del.className = 'chat-delete';
-        del.textContent = '✕';
-        del.onclick = (e) => deleteChat(chat.id, e);
-
-        div.appendChild(span);
-        div.appendChild(del);
-        chatList.appendChild(div);
-      });
-    }
-
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
-
-    function formatMarkdown(text) {
-      const codeBlocks = [];
-      let processed = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-        const idx = codeBlocks.length;
-        const cleanCode = escapeHtml(code.trim());
-        const label = lang ? escapeHtml(lang) : 'code';
-        codeBlocks.push(`
-          <div class="code-block-wrap">
-            <div class="code-block-header">
-              <span>${label}</span>
-              <button class="copy-code-btn" onclick="copyCodeBlock(this)">Копировать</button>
-            </div>
-            <pre><code>${cleanCode}</code></pre>
-          </div>
-        `);
-        return `@@CODEBLOCK_${idx}@@`;
-      });
-
-      processed = escapeHtml(processed);
-      processed = processed.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
-      processed = processed.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      processed = processed.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
-      processed = processed.replace(/^###\s+(.+)$/gm, '<h4>$1</h4>');
-      processed = processed.replace(/^##\s+(.+)$/gm, '<h3>$1</h3>');
-
-      const lines = processed.split('\n');
-      let html = '';
-      let inList = false;
-
-      for (let line of lines) {
-        if (line.startsWith('@@CODEBLOCK_')) {
-          if (inList) { html += '</ul>'; inList = false; }
-          html += line;
-          continue;
-        }
-        const listMatch = line.match(/^\s*[-*•]\s+(.+)/);
-        if (listMatch) {
-          if (!inList) { html += '<ul>'; inList = true; }
-          html += `<li>${listMatch[1]}</li>`;
-        } else {
-          if (inList) { html += '</ul>'; inList = false; }
-          if (line.trim() === '') {
-            html += '<br>';
-          } else if (line.startsWith('<h3>') || line.startsWith('<h4>')) {
-            html += line;
-          } else {
-            html += `<p>${line}</p>`;
-          }
-        }
-      }
-      if (inList) html += '</ul>';
-
-      codeBlocks.forEach((block, i) => {
-        html = html.replace(`@@CODEBLOCK_${i}@@`, block);
-      });
-
-      return html;
-    }
-
-    window.copyCodeBlock = function(btn) {
-      const codeEl = btn.closest('.code-block-wrap').querySelector('code');
-      if (!codeEl) return;
-      navigator.clipboard.writeText(codeEl.innerText).then(() => {
-        const orig = btn.textContent;
-        btn.textContent = 'Скопировано';
-        setTimeout(() => { btn.textContent = orig; }, 1500);
-      });
-    };
-
-    window.useSuggestion = function(promptText) {
-      sendMessage(promptText);
-    };
-
-    function renderMessages() {
-      const chat = chats.find(c => c.id === currentChatId);
-      chatContainer.innerHTML = '';
-
-      if (!chat || chat.messages.length === 0) {
-        chatContainer.innerHTML = `
-          <div class="welcome">
-            <div class="welcome-logo">✦</div>
-            <h2>Nova AI</h2>
-            <p>Интеллектуальный помощник от студии Nova Labs. Выберите готовую идею или задайте свой вопрос.</p>
-            <div class="suggestions-grid">
-              <div class="suggestion-card" onclick="useSuggestion('Придумай 5 креативных идей для нового канала в Telegram')">
-                <span class="suggestion-title">Идеи для проекта</span>
-                <span class="suggestion-desc">Свежие концепции для запуска в Telegram</span>
-              </div>
-              <div class="suggestion-card" onclick="useSuggestion('Составь пошаговый план развития личного бренда с нуля')">
-                <span class="suggestion-title">План и стратегия</span>
-                <span class="suggestion-desc">Пошаговый разбор любой задачи</span>
-              </div>
-              <div class="suggestion-card" onclick="useSuggestion('Объясни простыми словами, как работают нейросети и токены')">
-                <span class="suggestion-title">Простыми словами</span>
-                <span class="suggestion-desc">Разбор сложной темы за 1 минуту</span>
-              </div>
-              <div class="suggestion-card" onclick="useSuggestion('Составь цепляющий пост-анонс для запуска AI-сервиса')">
-                <span class="suggestion-title">Текст и посты</span>
-                <span class="suggestion-desc">Сильный текст для соцсетей</span>
-              </div>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      chat.messages.forEach(m => {
-        const div = document.createElement('div');
-        div.className = 'msg ' + m.role;
-        if (m.role === 'assistant') {
-          div.innerHTML = formatMarkdown(m.text);
-        } else {
-          if (m.imagePreview) {
-            const img = document.createElement('img');
-            img.src = m.imagePreview;
-            img.className = 'msg-image';
-            div.appendChild(img);
-          }
-          const span = document.createElement('span');
-          span.textContent = m.text;
-          div.appendChild(span);
-        }
-        chatContainer.appendChild(div);
-      });
-
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    function applyInitialTelegramUser() {
-      if (!unsafeUser) return;
-      const uid = String(unsafeUser.id);
-      currentUserId = uid;
-      userInfoLabel.textContent = `ID: ${uid}` + (unsafeUser.username ? ` (@${unsafeUser.username})` : '');
-      modalUserId.textContent = uid;
-
-      if (uid === ADMIN_ID) {
-        userIsPro = true;
-        quotaBadge.textContent = 'Admin ∞';
-        quotaBadge.classList.add('unlimited');
-        proTagBadge.textContent = 'PRO';
-        openAdminBtn.style.display = 'block';
-      }
-    }
-
-    function updateStatusUI(status) {
-      if (!status) return;
-      userIsPro = Boolean(status.isUnlimited || status.isAdmin);
-
-      if (status.priceStars) {
-        buyStarsBtn.textContent = `⭐ Купить Nova Pro за ${status.priceStars} Stars`;
-      }
-
-      if (userIsPro) {
-        quotaBadge.textContent = status.isAdmin ? 'Admin ∞' : 'Nova Pro ∞';
-        quotaBadge.classList.add('unlimited');
-        proTagBadge.textContent = 'PRO';
-      } else {
-        quotaBadge.textContent = `${status.remaining} / ${status.limit}`;
-        quotaBadge.classList.remove('unlimited');
-        proTagBadge.textContent = 'PRO 🔒';
-      }
-
-      if (status.isAdmin) {
-        openAdminBtn.style.display = 'block';
-      }
-
-      if (status.userId) {
-        currentUserId = String(status.userId);
-        userInfoLabel.textContent = `ID: ${status.userId}` + (status.username ? ` (@${status.username})` : '');
-        modalUserId.textContent = status.userId;
-      }
-    }
-
-    async function fetchUserStatus() {
-      try {
-        const res = await fetch(`${WORKER_URL}/api/status`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Telegram-Init-Data': initData
-          }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        updateStatusUI(data);
-      } catch (e) {
-        if (!unsafeUser) {
-          quotaBadge.textContent = 'Онлайн';
-        }
-      }
-    }
-
-    async function sendMessage(overrideText) {
-      const rawText = (typeof overrideText === 'string') ? overrideText : promptInput.value;
-      const text = String(rawText || '').trim() || (attachedImage ? 'Опиши это изображение' : '');
-      if (!text || isSending) return;
-
-      let chat = chats.find(c => c.id === currentChatId);
-      if (!chat) {
-        createNewChat();
-        chat = chats.find(c => c.id === currentChatId);
-      }
-
-      if (chat.messages.length === 0) {
-        chat.title = text.slice(0, 32) + (text.length > 32 ? '...' : '');
-      }
-
-      const currentAttachment = attachedImage;
-      chat.messages.push({
-        role: 'user',
-        text,
-        imagePreview: currentAttachment ? currentAttachment.previewUrl : null
-      });
-
-      promptInput.value = '';
-      promptInput.style.height = 'auto';
-      clearAttachment();
-      saveChats();
-      renderChatList();
-      renderMessages();
-
-      isSending = true;
-      sendBtn.disabled = true;
-
-      const loadingDiv = document.createElement('div');
-      loadingDiv.className = 'msg assistant';
-      loadingDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
-      chatContainer.appendChild(loadingDiv);
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 32000);
-
-      try {
-        const historySlice = chat.messages
-          .filter(m => m.role === 'user' || m.role === 'assistant')
-          .slice(-10);
-
-        const contents = historySlice.map((m, idx) => {
-          const parts = [{ text: m.text }];
-          if (idx === historySlice.length - 1 && currentAttachment) {
-            parts.push({
-              inlineData: {
-                mimeType: currentAttachment.mimeType,
-                data: currentAttachment.data
-              }
-            });
-          }
-          return {
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts
-          };
-        });
-
-        const res = await fetch(`${WORKER_URL}/api/chat`, {
-          method: 'POST',
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Telegram-Init-Data': initData
-          },
-          body: JSON.stringify({
-            model: selectedModel,
-            contents
-          })
-        });
-
-        clearTimeout(timeoutId);
-        const payload = await res.json();
-        loadingDiv.remove();
-
-        if (!res.ok) {
-          throw { message: payload.error || 'Ошибка сервера', status: res.status };
-        }
-
-        const replyText = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Пустой ответ от модели.';
-        chat.messages.push({ role: 'assistant', text: replyText });
-        saveChats();
-        renderMessages();
-
-        if (payload.status) {
-          updateStatusUI(payload.status);
-        }
-      } catch (err) {
-        clearTimeout(timeoutId);
-        loadingDiv.remove();
-
-        chat.messages.pop();
-        saveChats();
-
-        const errDiv = document.createElement('div');
-        errDiv.className = 'msg error';
-        errDiv.textContent = err.name === 'AbortError'
-          ? 'Превышено время ожидания ответа от сервера. Попробуйте ещё раз.'
-          : (err.message === 'Failed to fetch'
-              ? 'Не удалось соединиться с сервером Cloudflare (проверьте VPN или деплой воркера).'
-              : (err.message || 'Ошибка соединения с сервером'));
-
-        if (err.status === 402 || err.status === 403) {
-          const btn = document.createElement('button');
-          btn.className = 'upgrade-inline-btn';
-          btn.textContent = 'Купить Nova Pro';
-          btn.onclick = openProModal;
-          errDiv.appendChild(btn);
-        }
-        chatContainer.appendChild(errDiv);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      } finally {
-        isSending = false;
-        sendBtn.disabled = false;
-      }
-    }
-
-    async function runAdminAction(action) {
-      const target = document.getElementById('adminTargetInput').value.trim();
-      const statusEl = document.getElementById('adminStatusText');
-      if (!target) {
-        statusEl.textContent = 'Введите ID или @username';
-        return;
-      }
-      statusEl.textContent = 'Выполняю...';
-      try {
-        const res = await fetch(`${WORKER_URL}/api/admin`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Telegram-Init-Data': initData
-          },
-          body: JSON.stringify({ action, target })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Ошибка');
-        statusEl.textContent = data.message;
-      } catch (e) {
-        statusEl.textContent = e.message;
-      }
-    }
-
-    // Init
-    applyInitialTelegramUser();
-    if (chats.length === 0) {
-      createNewChat();
-    } else {
-      currentChatId = chats[0].id;
-      renderChatList();
-      renderMessages();
-    }
-    fetchUserStatus();
-  </script>
+if(!chats.length)createNewChat();else{currentChatId=chats[0].id;renderChatList();renderMessages();}
+fetchUserStatus();
+</script>
 </body>
 </html>
